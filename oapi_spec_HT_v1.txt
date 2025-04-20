@@ -1,0 +1,436 @@
+openapi: 3.0.0
+info:
+  title: 3D Filament Library API
+  version: v1
+  description: API for users to register, login, and manage their personal 3D filament spools.
+servers:
+  - url: http://localhost:8080/api/v1 # Replace with your actual API base URL
+    description: Local development server
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    Error:
+      type: object
+      properties:
+        message:
+          type: string
+    UserRegistration:
+      type: object
+      required:
+        - username
+        - email
+        - password
+      properties:
+        username:
+          type: string
+          description: Unique username for the user.
+        email:
+          type: string
+          format: email
+          description: Email address of the user.
+        password:
+          type: string
+          format: password
+          description: Password for the user account.
+    LoginRequest:
+      type: object
+      required:
+        - username
+        - password
+      properties:
+        username:
+          type: string
+          description: Username of the user.
+        password:
+          type: string
+          format: password
+          description: Password of the user.
+    LoginResponse:
+      type: object
+      properties:
+        token:
+          type: string
+          description: JWT access token for authentication.
+    Spool:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: Unique identifier for the spool.
+          readOnly: true
+        name:
+          type: string
+          description: User-defined name for the spool (e.g., "Glow in the Dark PLA").
+        material:
+          type: string
+          description: Material of the filament (e.g., "PLA", "ABS", "PETG").
+        brand:
+          type: string
+          nullable: true
+          description: Brand of the filament.
+        color:
+          type: string
+          nullable: true
+          description: Color of the filament (e.g., "Red", "Blue", "Translucent").
+        diameter:
+          type: number
+          format: float
+          description: Diameter of the filament in mm (e.g., 1.75, 2.85).
+        weight_grams:
+          type: integer
+          description: Original weight of the spool in grams.
+        remaining_grams:
+          type: integer
+          description: Remaining weight of the filament on the spool in grams.
+        purchase_date:
+          type: string
+          format: date
+          nullable: true
+          description: Date when the spool was purchased.
+        notes:
+          type: string
+          nullable: true
+          description: Any additional notes about the spool.
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+    SpoolCreationRequest:
+      type: object
+      required:
+        - name
+        - material
+        - diameter
+        - weight_grams
+        - remaining_grams
+      properties:
+        name:
+          type: string
+          description: User-defined name for the spool.
+        material:
+          type: string
+          description: Material of the filament.
+        brand:
+          type: string
+          nullable: true
+          description: Brand of the filament.
+        color:
+          type: string
+          nullable: true
+          description: Color of the filament.
+        diameter:
+          type: number
+          format: float
+          description: Diameter of the filament in mm.
+        weight_grams:
+          type: integer
+          description: Original weight of the spool in grams.
+        remaining_grams:
+          type: integer
+          description: Remaining weight of the filament on the spool in grams.
+        purchase_date:
+          type: string
+          format: date
+          nullable: true
+          description: Date when the spool was purchased.
+        notes:
+          type: string
+          nullable: true
+          description: Any additional notes about the spool.
+    SpoolUpdateRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          description: User-defined name for the spool.
+        material:
+          type: string
+          description: Material of the filament.
+        brand:
+          type: string
+          nullable: true
+          description: Brand of the filament.
+        color:
+          type: string
+          nullable: true
+          description: Color of the filament.
+        diameter:
+          type: number
+          format: float
+          description: Diameter of the filament in mm.
+        weight_grams:
+          type: integer
+          description: Original weight of the spool in grams.
+        remaining_grams:
+          type: integer
+          description: Remaining weight of the filament on the spool in grams.
+        purchase_date:
+          type: string
+          format: date
+          nullable: true
+          description: Date when the spool was purchased.
+        notes:
+          type: string
+          nullable: true
+          description: Any additional notes about the spool.
+paths:
+  /register:
+    post:
+      summary: Register a new user.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserRegistration'
+      responses:
+        '201':
+          description: User successfully registered.
+        '400':
+          description: Invalid input or user already exists.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /login:
+    post:
+      summary: Login an existing user.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: User successfully logged in. Returns an authentication token.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '401':
+          description: Invalid credentials.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /spools:
+    get:
+      summary: Get all spools for the authenticated user.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: A list of the user's spools.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Spool'
+        '401':
+          description: Authentication required.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    post:
+      summary: Add a new spool to the authenticated user's library.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SpoolCreationRequest'
+      responses:
+        '201':
+          description: Spool successfully created. Returns the newly created spool.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Spool'
+        '400':
+          description: Invalid input.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Authentication required.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /spools/{spoolId}:
+    get:
+      summary: Get a specific spool by ID for the authenticated user.
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: spoolId
+          required: true
+          schema:
+            type: integer
+            format: int64
+          description: ID of the spool to retrieve.
+      responses:
+        '200':
+          description: Information about the requested spool.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Spool'
+        '401':
+          description: Authentication required.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Unauthorized to access this spool.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Spool not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    put:
+      summary: Update an existing spool for the authenticated user.
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: spoolId
+          required: true
+          schema:
+            type: integer
+            format: int64
+          description: ID of the spool to update.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SpoolUpdateRequest'
+      responses:
+        '200':
+          description: Spool successfully updated. Returns the updated spool.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Spool'
+        '400':
+          description: Invalid input.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Authentication required.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Unauthorized to update this spool.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Spool not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    delete:
+      summary: Delete a specific spool by ID for the authenticated user.
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: spoolId
+          required: true
+          schema:
+            type: integer
+            format: int64
+          description: ID of the spool to delete.
+      responses:
+        '204':
+          description: Spool successfully deleted.
+        '401':
+          description: Authentication required.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Unauthorized to delete this spool.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Spool not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
