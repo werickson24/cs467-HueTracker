@@ -18,7 +18,7 @@
     "@neondatabase/serverless": "^1.0.0",
     "@prisma/adapter-neon": "^6.7.0",
     "@prisma/client": "^6.7.0",
-    "bcrypt": "^5.1.1",
+    "bcryptjs": "^3.0.2",
     "next": "15.2.4",
     "next-auth": "^4.24.11",
     "react": "^19.0.0",

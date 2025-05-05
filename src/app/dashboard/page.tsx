@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { Filament } from '@/types/Filament';
 //import { useSession } from 'next-auth/react';
 import { 
   Container, 
@@ -22,7 +23,7 @@ import {
   MenuItem
 } from '@mui/material';
 
-type Filament = {
+/*type Filament = {
   id: string;
   name: string;
   materialType: string;
@@ -31,7 +32,7 @@ type Filament = {
   weightRemaining: number;
   spoolWeight: number;
   notes?: string;
-};
+};*/
 
 const materialTypes = ['PLA', 'PETG', 'ABS', 'TPU', 'NYLON', 'OTHER'];
 
