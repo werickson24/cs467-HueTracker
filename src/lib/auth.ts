@@ -16,7 +16,7 @@ export const authOptions: AuthOptions = {
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
           return null;
-        }
+        };
 
         const user = await prisma.user.findUnique({
           where: {
@@ -26,7 +26,7 @@ export const authOptions: AuthOptions = {
 
         if (!user) {
           return null;
-        }
+        };
 
         const isPasswordValid = await bcrypt.compare(
           credentials.password,
@@ -35,7 +35,7 @@ export const authOptions: AuthOptions = {
 
         if (!isPasswordValid) {
           return null;
-        }
+        };
 
         // Ensure email is always a string
         return {
