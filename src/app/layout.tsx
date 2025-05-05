@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import './globals.css'
 import ThemeRegistry from './ThemeRegistry'
+import { Providers } from "./providers"
 
 
 export const metadata: Metadata = {
@@ -17,7 +18,7 @@ export default function RootLayout({
     <html lang="en">
       <body>
           <ThemeRegistry>
-          {children}
+            <Providers>{children}</Providers>
           </ThemeRegistry>
       </body>
     </html>

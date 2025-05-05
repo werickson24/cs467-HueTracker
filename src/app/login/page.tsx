@@ -1,80 +1,99 @@
-'use client';
+"use client"
 
-import { useState } from 'react';
-import { signIn } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
-import { TextField, Button, Box, Typography, Container, Paper } from '@mui/material';
+import { useSession } from "next-auth/react"
+import { signIn } from "next-auth/react"
+import { useRouter } from "next/navigation"
+import { useEffect } from "react"
+import { 
+  Container, 
+  Box, 
+  Typography, 
+  Button, 
+  CircularProgress,
+  Paper
+} from "@mui/material"
 
-export default function LoginPage() {
-  const router = useRouter();
-  const [error, setError] = useState('');
-  
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const formData = new FormData(e.currentTarget);
-    const email = formData.get('email') as string;
-    const password = formData.get('password') as string;
+export default function Login() {
+  const { status } = useSession()
+  const router = useRouter()
 
-    try {
-      const result = await signIn('credentials', {
-        email,
-        password,
-        redirect: false,
-      });
-
-      if (result?.error) {
-        setError('Invalid credentials');
-      } else {
-        router.push('/dashboard');
-      }
-    } catch (error) {
-      console.error('Sign in error:', error);
-      setError('An error occurred during sign in');
+  // Redirect to dashboard if already authenticated
+  useEffect(() => {
+    if (status === "authenticated") {
+      router.replace("/dashboard")
     }
-  };
+  }, [status, router])
+
+  // Show loading state while checking authentication
+  if (status === "loading") {
+    return (
+      <Box 
+        display="flex" 
+        justifyContent="center" 
+        alignItems="center" 
+        minHeight="100vh"
+      >
+        <CircularProgress />
+      </Box>
+    )
+  }
 
   return (
-    <Container component="main" maxWidth="xs">
-      <Paper elevation={3} sx={{ p: 4, mt: 8 }}>
-        <Typography component="h1" variant="h5" textAlign="center">
-          Sign in
-        </Typography>
-        <Box component="form" onSubmit={handleSubmit} sx={{ mt: 1 }}>
-          <TextField
-            margin="normal"
-            required
-            fullWidth
-            id="email"
-            label="Email Address"
-            name="email"
-            autoComplete="email"
-            autoFocus
-          />
-          <TextField
-            margin="normal"
-            required
-            fullWidth
-            name="password"
-            label="Password"
-            type="password"
-            id="password"
-            autoComplete="current-password"
-          />
-          {error && (
-            <Typography color="error" sx={{ mt: 1 }}>
-              {error}
-            </Typography>
-          )}
-          <Button
-            type="submit"
-            fullWidth
-            variant="contained"
-            sx={{ mt: 3, mb: 2 }}
-          >
+    <Container maxWidth="sm">
+      <Box 
+        display="flex" 
+        flexDirection="column" 
+        alignItems="center" 
+        justifyContent="center" 
+        minHeight="100vh"
+        py={4}
+      >
+        <Paper 
+          elevation={3} 
+          sx={{ 
+            p: 4, 
+            width: '100%',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: 3
+          }}
+        >
+          <Typography variant="h4" component="h1" gutterBottom>
             Sign In
-          </Button>
-        </Box>
-      </Paper>
+          </Typography>
+
+          {status === "authenticated" ? (
+            <div>
+              <Typography variant="body1" gutterBottom>
+                Add another passkey to your account
+              </Typography>
+              <Button 
+                variant="contained" 
+                fullWidth
+                size="large"
+                onClick={() => signIn("passkey", { action: "register" })}
+              >
+                Register new Passkey
+              </Button>
+            </div>
+          ) : (
+            <div>
+              <Typography variant="body1" gutterBottom>
+                Sign in with your passkey
+              </Typography>
+              <Button 
+                variant="contained" 
+                fullWidth
+                size="large"
+                onClick={() => signIn("passkey", { callbackUrl: "/dashboard" })}
+              >
+                Sign in with Passkey
+              </Button>
+            </div>
+          )}
+        </Paper>
+      </Box>
     </Container>
-  );
+  )
 }
