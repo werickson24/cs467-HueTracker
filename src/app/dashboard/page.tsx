@@ -24,6 +24,7 @@ import {
   MenuItem,
   CircularProgress
 } from '@mui/material';
+import SignOutButton from '@/components/auth/signout-button';
 
 const materialTypes = ['PLA', 'PETG', 'ABS', 'TPU', 'NYLON', 'OTHER'];
 
@@ -104,6 +105,7 @@ export default function Dashboard() {
       >
         Add New Filament
       </Button>
+      <SignOutButton/>
     </Box>
 
     <TableContainer component={Paper}>
