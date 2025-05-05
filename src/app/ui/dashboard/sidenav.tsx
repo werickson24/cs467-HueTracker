@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import NavLinks from '@/src/app/ui/dashboard/nav-links';
-import AcmeLogo from '@/src/app/ui/acme-logo';
+import HueTrackerLogo from '@/src/app/ui/acme-logo';
 import { PowerIcon } from '@heroicons/react/24/outline';
 import { signOut } from '@/auth';
 
@@ -12,7 +12,7 @@ export default function SideNav() {
         href="/"
       >
         <div className="w-32 text-white md:w-40">
-          <AcmeLogo />
+          <HueTrackerLogo />
         </div>
       </Link>
       <div className="flex grow flex-row justify-between space-x-2 md:flex-col md:space-x-0 md:space-y-2">
