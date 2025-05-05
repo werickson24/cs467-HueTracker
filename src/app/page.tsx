@@ -1,7 +1,9 @@
 import Link from 'next/link'
+import Image from 'next/image'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { redirect } from 'next/navigation'
+import { Container, Box, Typography, Button, Stack } from '@mui/material'
 
 export default async function Home() {
   const session = await getServerSession(authOptions)
@@ -12,32 +14,55 @@ export default async function Home() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center p-4">
-      <div className="w-full max-w-md space-y-8">
-        <div>
-          <h1 className="text-4xl font-bold text-center">
-            Filament Manager
-          </h1>
-          <p className="mt-2 text-center text-gray-600">
-            Track and manage your 3D printing filaments
-          </p>
-        </div>
+    <Box
+      display="flex"
+      minHeight="100vh"
+      flexDirection="column"
+      alignItems="center"
+      justifyContent="center"
+      p={2}
+    >
+      <Container maxWidth="sm">
+        <Stack spacing={4}>
+          <Box textAlign="center">
+            <Image
+              src="/HueTracker_Logo_grey.png"
+              alt="Logo"
+              width={800}
+              height={200}
+              style={{ margin: 'auto' }}
+            />
+            <Typography
+              variant="body1"
+              color="text.secondary"
+              sx={{ mt: 2 }}
+            >
+              Track and manage your 3D printing filaments
+            </Typography>
+          </Box>
 
-        <div className="flex flex-col gap-4">
-          <Link
-            href="/login"
-            className="w-full px-4 py-2 text-center text-white bg-blue-600 rounded hover:bg-blue-700"
-          >
-            Sign In
-          </Link>
-          <Link
-            href="/register"
-            className="w-full px-4 py-2 text-center text-blue-600 border border-blue-600 rounded hover:bg-blue-50"
-          >
-            Create Account
-          </Link>
-        </div>
-      </div>
-    </div>
+          <Stack spacing={2}>
+            <Link href="/login" style={{ textDecoration: 'none' }}>
+              <Button
+                variant="contained"
+                fullWidth
+                size="large"
+              >
+                Sign In
+              </Button>
+            </Link>
+            <Link href="/register" style={{ textDecoration: 'none' }}>
+              <Button
+                variant="outlined"
+                fullWidth
+                size="large"
+              >
+                Create Account
+              </Button>
+            </Link>
+          </Stack>
+        </Stack>
+      </Container>
+    </Box>
   )
 }

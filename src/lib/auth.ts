@@ -11,13 +11,47 @@ export const authOptions: AuthOptions = {
       name: "Credentials",
       credentials: {
         email: { label: "Email", type: "email" },
-        password: { label: "Password", type: "password" }
+        password: { label: "Password", type: "password" },
+        name: { label: "Name", type: "text" }, // Add this for registration
+        action: { label: "Action", type: "text" } // Login or Register
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
           return null;
-        };
+        }
 
+        const action = credentials.action;
+
+        if (action === 'register') {
+          // Check if user exists
+          const existingUser = await prisma.user.findUnique({
+            where: {
+              email: credentials.email
+            }
+          });
+
+          if (existingUser) {
+            throw new Error('User already exists');
+          }
+
+          // Create new user
+          const hashedPassword = await bcrypt.hash(credentials.password, 10);
+          const user = await prisma.user.create({
+            data: {
+              email: credentials.email,
+              password: hashedPassword,
+              name: credentials.name || null,
+            }
+          });
+
+          return {
+            id: user.id,
+            email: user.email || "",
+            name: user.name,
+          };
+        }
+
+        // Login flow
         const user = await prisma.user.findUnique({
           where: {
             email: credentials.email
@@ -26,7 +60,7 @@ export const authOptions: AuthOptions = {
 
         if (!user) {
           return null;
-        };
+        }
 
         const isPasswordValid = await bcrypt.compare(
           credentials.password,
@@ -35,9 +69,8 @@ export const authOptions: AuthOptions = {
 
         if (!isPasswordValid) {
           return null;
-        };
+        }
 
-        // Ensure email is always a string
         return {
           id: user.id,
           email: user.email || "",
