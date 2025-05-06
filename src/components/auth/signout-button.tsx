@@ -5,7 +5,7 @@ import { Button } from "@mui/material"
  
 export default function SignOutButton() {
   return (
-    <Button onClick={() => signOut()}>
+    <Button variant="outlined" onClick={() => signOut()}>
       Sign Out
     </Button>
   )
