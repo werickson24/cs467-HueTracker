@@ -1,0 +1,131 @@
+-- Drop existing tables (in correct order to handle foreign key constraints)
+DROP TABLE IF EXISTS "Filament" CASCADE;
+DROP TABLE IF EXISTS "Account" CASCADE;
+DROP TABLE IF EXISTS "Session" CASCADE;
+DROP TABLE IF EXISTS "VerificationToken" CASCADE;
+DROP TABLE IF EXISTS "User" CASCADE;
+
+-- Create Tables
+CREATE TABLE "User" (
+    "id" TEXT PRIMARY KEY,
+    "name" TEXT,
+    "email" TEXT UNIQUE,
+    "password" TEXT,
+    "emailVerified" TIMESTAMP,
+    "image" TEXT
+);
+
+CREATE TABLE "Account" (
+    "id" TEXT PRIMARY KEY,
+    "userId" TEXT NOT NULL,
+    "type" TEXT NOT NULL,
+    "provider" TEXT NOT NULL,
+    "providerAccountId" TEXT NOT NULL,
+    "refresh_token" TEXT,
+    "access_token" TEXT,
+    "expires_at" INTEGER,
+    "token_type" TEXT,
+    "scope" TEXT,
+    "id_token" TEXT,
+    "session_state" TEXT,
+    FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE,
+    UNIQUE("provider", "providerAccountId")
+);
+
+CREATE TABLE "Session" (
+    "id" TEXT PRIMARY KEY,
+    "sessionToken" TEXT UNIQUE NOT NULL,
+    "userId" TEXT NOT NULL,
+    "expires" TIMESTAMP NOT NULL,
+    FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE
+);
+
+CREATE TABLE "VerificationToken" (
+    "identifier" TEXT NOT NULL,
+    "token" TEXT NOT NULL UNIQUE,
+    "expires" TIMESTAMP NOT NULL,
+    UNIQUE("identifier", "token")
+);
+
+CREATE TABLE "Filament" (
+    "id" TEXT PRIMARY KEY,
+    "name" TEXT NOT NULL,
+    "materialType" TEXT NOT NULL,
+    "brand" TEXT NOT NULL,
+    "color" TEXT NOT NULL,
+    "weightRemaining" FLOAT NOT NULL,
+    "spoolWeight" FLOAT NOT NULL,
+    "notes" TEXT,
+    "createdAt" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP NOT NULL,
+    "userId" TEXT NOT NULL,
+    FOREIGN KEY ("userId") REFERENCES "User"("id")
+);
+
+-- Insert Sample Data
+-- First, create a sample user
+INSERT INTO "User" ("id", "name", "email", "password") 
+VALUES (
+    'clhz2rk8g0000mp08p4q4p4q4',
+    'werickson24',
+    'werickson24@example.com',
+    'hashed_password_would_go_here'
+);
+
+-- Add some sample filaments for the test user
+INSERT INTO "Filament" (
+    "id",
+    "name",
+    "materialType",
+    "brand",
+    "color",
+    "weightRemaining",
+    "spoolWeight",
+    "notes",
+    "createdAt",
+    "updatedAt",
+    "userId"
+) VALUES (
+    'clhz2rk8g0001mp08p4q4p4q4',
+    'PLA Plus Black',
+    'PLA+',
+    'eSUN',
+    'Black',
+    850.0,
+    1000.0,
+    'Great for structural parts',
+    '2025-05-05 04:24:20',
+    '2025-05-05 04:24:20',
+    'clhz2rk8g0000mp08p4q4p4q4'
+), (
+    'clhz2rk8g0002mp08p4q4p4q4',
+    'PETG Blue',
+    'PETG',
+    'Overture',
+    'Blue',
+    750.0,
+    1000.0,
+    'Good temperature resistance',
+    '2025-05-05 04:24:20',
+    '2025-05-05 04:24:20',
+    'clhz2rk8g0000mp08p4q4p4q4'
+);
+
+
+-- CreateTable
+CREATE TABLE "Authenticator" (
+    "credentialID" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "providerAccountId" TEXT NOT NULL,
+    "credentialPublicKey" TEXT NOT NULL,
+    "counter" INTEGER NOT NULL,
+    "credentialDeviceType" TEXT NOT NULL,
+    "credentialBackedUp" BOOLEAN NOT NULL,
+    "transports" TEXT,
+    PRIMARY KEY ("userId", "credentialID"),
+    CONSTRAINT "Authenticator_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+);
+ 
+ 
+-- CreateIndex
+CREATE UNIQUE INDEX "Authenticator_credentialID_key" ON "Authenticator"("credentialID");
