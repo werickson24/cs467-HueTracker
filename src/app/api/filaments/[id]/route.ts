@@ -6,7 +6,7 @@ const prisma = new PrismaClient()
 
 export async function DELETE(
   request: Request,
-  context:  { params: { id: string } }
+  context:  { params: Promise<{ id: string }> }
 ) {
   const session = await auth()
   const { id } = await context.params
@@ -41,7 +41,7 @@ export async function DELETE(
 
 export async function PUT(
   request: Request,
-  context: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   const session = await auth()
   const { id } =  await context.params

@@ -67,6 +67,7 @@ export default function Register() {
         // However, since callbackUrl is set, next-auth usually handles the final redirect
         // server-side after the callback API route finishes.
         console.log("Passkey registration process initiated. Checking for redirect...", res.url);
+        window.location.href = res.url;
         // No need for explicit client-side redirect here if callbackUrl is set and works.
       } else if (res?.error) {
          // Handle errors returned by the signIn function itself

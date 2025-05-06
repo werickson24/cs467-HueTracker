@@ -340,7 +340,7 @@ export default function DashboardClient() {
         <DialogTitle>Delete Filament</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            Are you sure you want to delete "{selectedFilament?.name}"? This action cannot be undone.
+            {`Are you sure you want to delete "${selectedFilament?.name}"? This action cannot be undone.`}
           </DialogContentText>
         </DialogContent>
         <DialogActions>
