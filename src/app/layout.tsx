@@ -3,7 +3,7 @@ import './globals.css'
 import theme from './theme';
 import { AppRouterCacheProvider } from '@mui/material-nextjs/v15-appRouter';
 import { ThemeProvider } from '@mui/material/styles';
-
+import { Analytics } from '@vercel/analytics/next';
 
 export const metadata: Metadata = {
   title: 'HueTracker',
@@ -21,6 +21,7 @@ export default function RootLayout({
           <AppRouterCacheProvider>
             <ThemeProvider theme={theme}>
               {children}
+              <Analytics />
             </ThemeProvider>
           </AppRouterCacheProvider>
       </body>
