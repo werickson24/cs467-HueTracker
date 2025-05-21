@@ -12,3 +12,7 @@ export interface Filament {
   updatedAt: string; // Or Date
   userId: string; // Assuming you want this client-side or just for type safety
 }
+
+export interface FilamentWithScore extends Filament {
+  _matchScore: number;
+}
