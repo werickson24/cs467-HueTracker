@@ -260,7 +260,7 @@ export default function DashboardClient() {
       <AppBar position="static" color="default" elevation={1}>
         <Toolbar sx={{ justifyContent: 'space-between' }}>
           <Image
-            src="/HueTracker_Logo_grey.png"
+            src="/HueTracker_Logo_transparent.svg"
             alt="Logo"
             width={150}
             height={100}
@@ -297,7 +297,7 @@ export default function DashboardClient() {
                     <TableCell>Weight Remaining</TableCell>
                     <TableCell>Spool Weight</TableCell>
                     <TableCell>Notes</TableCell>
-                    <TableCell>Actions</TableCell>
+                    <TableCell align='center'>Actions</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
