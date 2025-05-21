@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Filament } from '@/types/Filament';
+import { Filament, FilamentWithScore } from '@/types/Filament';
 import Image from 'next/image';
 import {
   Container,
@@ -31,6 +31,10 @@ import {
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import SignOutButton from '@/components/auth/signout-button';
+import SearchBar from '@/components/search/SearchBar';
+import SearchResultsPanel from '@/components/search/SearchResultsPanel';
+import { fuzzySearch, categorizeResults } from '@/lib/fuzzySearch';
+import AngledSpoolIcon from '@/components/spoolIcon';
 
 const materialTypes = ['PLA', 'PETG', 'ABS', 'TPU', 'NYLON', 'OTHER'];
 
@@ -55,10 +59,42 @@ export default function DashboardClient() {
   const [selectedFilament, setSelectedFilament] = useState<Filament | null>(null);
   const [newFilament, setNewFilament] = useState<Partial<Filament>>({});
   const [isEditing, setIsEditing] = useState(false);
+  
+  // New state for search functionality
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchActive, setSearchActive] = useState(false);
+  const [searchResults, setSearchResults] = useState<{
+    bestMatches: FilamentWithScore[];
+    notEnough: FilamentWithScore[];
+    closeMatches: FilamentWithScore[];
+  }>({
+    bestMatches: [],
+    notEnough: [],
+    closeMatches: []
+  });
 
   useEffect(() => {
     fetchFilaments();
   }, []);
+  
+  // Effect to handle search updates
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      setSearchActive(false);
+      return;
+    }
+    
+    setSearchActive(true);
+    
+    // Define specific keys to search
+    const searchFields: (keyof Pick<Filament, 'name' | 'materialType' | 'brand' | 'color' | 'notes'>)[] = 
+      ['name', 'materialType', 'brand', 'color', 'notes'];
+    
+    const results = fuzzySearch(filaments, searchQuery, searchFields);
+    const categorized = categorizeResults(results);
+    
+    setSearchResults(categorized);
+  }, [searchQuery, filaments]);
 
   const fetchFilaments = async () => {
     setLoadingStates(prev => ({ ...prev, initial: true }));
@@ -203,6 +239,12 @@ export default function DashboardClient() {
     setSelectedFilament(null);
     setIsEditing(false);
   };
+  
+  // New handler for when a filament is selected from search results
+  const handleFilamentSelect = (filament: Filament) => {
+    setSearchQuery(''); // Clear search
+    handleEditClick(filament); // Open the edit dialog for this filament
+  };
 
   if (loadingStates.initial) {
     return (
@@ -228,79 +270,102 @@ export default function DashboardClient() {
         </Toolbar>
       </AppBar>
       <Container maxWidth="lg" sx={{ mt: 4, mb: 4, flex: 1 }}>
-        <TableContainer component={Paper}>
-          {/* Rest of your existing table code */}
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell>Name</TableCell>
-                <TableCell>Material Type</TableCell>
-                <TableCell>Brand</TableCell>
-                <TableCell>Color</TableCell>
-                <TableCell>Weight Remaining</TableCell>
-                <TableCell>Spool Weight</TableCell>
-                <TableCell>Notes</TableCell>
-                <TableCell>Actions</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {filaments.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={8} align="center">
-                    No filaments found. Add one!
-                  </TableCell>
-                </TableRow>
-              ) : (
-                filaments.map((filament) => (
-                  <TableRow key={filament.id}>
-                    {loadingStates[filament.id] ? (
-                      <TableCell colSpan={8}>
-                        <Box display="flex" justifyContent="center" alignItems="center">
-                          <CircularProgress size={20} />
-                          <Typography variant="body2" sx={{ ml: 1 }}>Updating...</Typography>
-                        </Box>
-                      </TableCell>
-                    ) : (
-                      <>
-                        <TableCell>{filament.name}</TableCell>
-                        <TableCell>{filament.materialType}</TableCell>
-                        <TableCell>{filament.brand}</TableCell>
-                        <TableCell>{filament.color}</TableCell>
-                        <TableCell>{filament.weightRemaining}g</TableCell>
-                        <TableCell>{filament.spoolWeight}g</TableCell>
-                        <TableCell>{filament.notes}</TableCell>
-                        <TableCell>
-                          <Tooltip title="Edit">
-                            <IconButton onClick={() => handleEditClick(filament)} size="small">
-                              <EditIcon />
-                            </IconButton>
-                          </Tooltip>
-                          <Tooltip title="Delete">
-                            <IconButton onClick={() => handleDeleteClick(filament)} size="small" color="error">
-                              <DeleteIcon />
-                            </IconButton>
-                          </Tooltip>
-                        </TableCell>
-                      </>
-                    )}
+        {/* Search Bar */}
+        <SearchBar 
+          query={searchQuery} 
+          onChange={setSearchQuery}
+        />
+
+        {/* Search Results or Table */}
+        {searchActive ? (
+          <SearchResultsPanel 
+            results={searchResults} 
+            onSelectFilament={handleFilamentSelect} 
+            query={searchQuery}
+          />
+        ) : (
+          <>
+            <TableContainer component={Paper}>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell></TableCell>
+                    <TableCell>Name</TableCell>
+                    <TableCell>Material Type</TableCell>
+                    <TableCell>Brand</TableCell>
+                    <TableCell>Color</TableCell>
+                    <TableCell>Weight Remaining</TableCell>
+                    <TableCell>Spool Weight</TableCell>
+                    <TableCell>Notes</TableCell>
+                    <TableCell>Actions</TableCell>
                   </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </TableContainer>
-        <Box display="flex" justifyContent="end" alignItems="center" mb={1} sx={{ mt: 2 }}>
-          <Button
-            variant="contained"
-            onClick={() => {
-              setIsEditing(false);
-              setNewFilament({});
-              setOpenDialog(true);
-            }}
-          >
-            Add New Filament
-          </Button>
-        </Box>
+                </TableHead>
+                <TableBody>
+                  {filaments.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={8} align="center">
+                        No filaments found. Add one!
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    filaments.map((filament) => (
+                      <TableRow key={filament.id}>
+                        {loadingStates[filament.id] ? (
+                          <TableCell colSpan={8}>
+                            <Box display="flex" justifyContent="center" alignItems="center">
+                              <CircularProgress size={20} />
+                              <Typography variant="body2" sx={{ ml: 1 }}>Updating...</Typography>
+                            </Box>
+                          </TableCell>
+                        ) : (
+                          <>
+                            <TableCell sx={{
+                              width: 'auto'}}><AngledSpoolIcon fillColor={filament.color} sx={{
+                                width: 50,  // Example fixed width
+                                height: 50, // Example fixed height
+                                display: 'block' // Ensures proper block-level rendering for centering
+                              }}/></TableCell>
+                            <TableCell>{filament.name}</TableCell>
+                            <TableCell>{filament.materialType}</TableCell>
+                            <TableCell>{filament.brand}</TableCell>
+                            <TableCell>{filament.color}</TableCell>
+                            <TableCell>{filament.weightRemaining}g</TableCell>
+                            <TableCell>{filament.spoolWeight}g</TableCell>
+                            <TableCell>{filament.notes}</TableCell>
+                            <TableCell>
+                              <Tooltip title="Edit">
+                                <IconButton onClick={() => handleEditClick(filament)} size="small">
+                                  <EditIcon />
+                                </IconButton>
+                              </Tooltip>
+                              <Tooltip title="Delete">
+                                <IconButton onClick={() => handleDeleteClick(filament)} size="small" color="error">
+                                  <DeleteIcon />
+                                </IconButton>
+                              </Tooltip>
+                            </TableCell>
+                          </>
+                        )}
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </TableContainer>
+            <Box display="flex" justifyContent="end" alignItems="center" mb={1} sx={{ mt: 2 }}>
+              <Button
+                variant="contained"
+                onClick={() => {
+                  setIsEditing(false);
+                  setNewFilament({});
+                  setOpenDialog(true);
+                }}
+              >
+                Add New Filament
+              </Button>
+            </Box>
+          </>
+        )}
 
         {/* Add/Edit Dialog */}
         <Dialog open={openDialog} onClose={handleDialogClose} maxWidth="xs" fullWidth={true}>
