@@ -91,16 +91,11 @@ export default function DashboardClient() {
 
     const { categories } = fuzzySearchEX(filaments, searchQuery);
 
-
-    //const results = fuzzySearch(filaments, searchQuery, searchFields);
-    //const categorized = categorizeResults(results);
-
-    //setSearchResults(categorized);
-    setSearchResults({
-      bestMatches: [...categories.perfectMatches, ...categories.goodMatches],
-      notEnough: categories.colorMatches,
-      closeMatches: categories.fuzzyMatches
-    });
+  setSearchResults({
+    bestMatches: [...categories.perfectMatches, ...categories.goodMatches],
+    notEnough: categories.lowQuantityMatches,
+    closeMatches: categories.fuzzyMatches
+  });
 
 
   }, [searchQuery, filaments]);

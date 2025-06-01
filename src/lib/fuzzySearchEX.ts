@@ -1,7 +1,7 @@
 import { Filament, FilamentWithScore } from '@/types/Filament';
 import uFuzzy from '@leeoniya/ufuzzy';
-import nlp from 'compromise';
 import chroma from 'chroma-js';
+import { materialTypes } from '@/types/Filament';
 
 // Enhanced search result with explanation
 export interface EnhancedFilamentResult extends FilamentWithScore {
@@ -10,7 +10,7 @@ export interface EnhancedFilamentResult extends FilamentWithScore {
   quantityMatch?: boolean;
 }
 
-// Query structure after NLP parsing
+// Query structure after parsing
 interface ParsedQuery {
   colors: string[];
   materials: string[];
@@ -18,138 +18,105 @@ interface ParsedQuery {
   minWeight?: number;
   maxWeight?: number;
   textSearch: string[];
+  hasQuantityQuery: boolean;
   operators: {
     weight: 'greater' | 'less' | 'equal' | 'between' | null;
   };
 }
 
-// Color similarity using chroma-js
+// Simple Color matching using chroma-js
 class ColorMatcher {
-  private static colorMap: Record<string, string> = {
-    'blue': '#1a77c9',
-    'red': '#d32f2f',
-    'green': '#2e7d32',
-    'yellow': '#ffc107',
-    'orange': '#ff9800',
-    'black': '#263238',
-    'white': '#f5f5f5',
-    'purple': '#9c27b0',
-    'pink': '#e91e63',
-    'brown': '#795548',
-    'grey': '#9e9e9e',
-    'gray': '#9e9e9e',
-    'cyan': '#00bcd4',
-    'teal': '#009688',
-    'lime': '#cddc39',
-    'transparent': 'rgba(176, 182, 195, 0.7)',
-    'clear': 'rgba(255,255,255,0.7)',
-  };
-
-  static getColorSimilarity(color1: string, color2: string): number {
+  static getColorSimilarity(queryColor: string, filamentColor: string): number {
     try {
-      // Normalize colors
-      const normalizedColor1 = this.normalizeColor(color1);
-      const normalizedColor2 = this.normalizeColor(color2);
+      const c1 = chroma(queryColor);
+      const c2 = chroma(filamentColor);
       
-      if (!normalizedColor1 || !normalizedColor2) return 0;
-      
-      // Calculate distance using chroma-js
-      const c1 = chroma(normalizedColor1);
-      const c2 = chroma(normalizedColor2);
-      
-      // Delta-E distance (lower is more similar)
       const deltaE = chroma.deltaE(c1, c2);
+      return Math.max(0, 100 - (deltaE * 2.5));
+    } catch {
+      // String fallback
+      const query = queryColor.toLowerCase();
+      const filament = filamentColor.toLowerCase();
       
-      // Convert to similarity score (0-100, higher is more similar)
-      return Math.max(0, 100 - deltaE);
-    } catch {
-      return 0;
-    }
-  }
-
-  private static normalizeColor(color: string): string | null {
-    const lowerColor = color.toLowerCase();
-    
-    // Check our predefined map first
-    for (const [key, value] of Object.entries(this.colorMap)) {
-      if (lowerColor.includes(key)) {
-        return value;
+      if (filament.includes(query) || query.includes(filament)) {
+        return 75;
       }
-    }
-    
-    // Try to parse as hex, rgb, etc.
-    try {
-      return chroma(color).hex();
-    } catch {
-      return null;
+      return 0;
     }
   }
 }
 
-// NLP Query Parser
+// Simplified Query Parser
 class QueryParser {
-  private static materialKeywords = ['pla', 'abs', 'petg', 'tpu', 'wood', 'metal', 'silk'];
-  private static colorKeywords = Object.keys(ColorMatcher['colorMap']);
-  
   static parseQuery(query: string): ParsedQuery {
-    const doc = nlp(query.toLowerCase());
-    
     const result: ParsedQuery = {
       colors: [],
       materials: [],
       brands: [],
       textSearch: [],
+      hasQuantityQuery: false,
       operators: { weight: null }
     };
 
-    // Extract numbers and weight operators
-    const numbers = doc.match('#Value').out('array');
+    // Weight parsing
     const weightPattern = /(\d+)\s*(g|grams?|kg|kilograms?)/gi;
-    const operatorPattern = /(>|<|>=|<=|at least|more than|less than|greater than|minimum|min|maximum|max)/gi;
+    const operatorPattern = /(>|<|>=|<=|at least|more than|less than|greater than|minimum|min|maximum|max|above|below|over|under)/gi;
     
-    let weightMatch = query.match(weightPattern);
-    let operatorMatch = query.match(operatorPattern);
+    const numbers = query.match(/\d+/g);
+    const weightMatch = query.match(weightPattern);
+    const operatorMatch = query.match(operatorPattern);
     
-    if (weightMatch && numbers.length > 0) {
+    if (weightMatch || operatorMatch || /\b(weight|gram|kg|left|remaining|enough|material)\b/i.test(query)) {
+      result.hasQuantityQuery = true;
+    }
+    
+    if (weightMatch && numbers) {
       const weight = parseInt(numbers[0]);
       if (operatorMatch) {
         const op = operatorMatch[0].toLowerCase();
-        if (op.includes('>') || op.includes('more') || op.includes('greater') || op.includes('least') || op.includes('min')) {
+        if (op.includes('>') || op.includes('more') || op.includes('greater') || 
+            op.includes('least') || op.includes('min') || op.includes('above') || op.includes('over')) {
           result.operators.weight = 'greater';
           result.minWeight = weight;
-        } else if (op.includes('<') || op.includes('less') || op.includes('max')) {
+        } else if (op.includes('<') || op.includes('less') || op.includes('max') || 
+                   op.includes('below') || op.includes('under')) {
           result.operators.weight = 'less';
           result.maxWeight = weight;
         }
       }
     }
 
-    // Extract colors
-    this.colorKeywords.forEach(color => {
-      if (query.toLowerCase().includes(color)) {
-        result.colors.push(color);
-      }
-    });
-
     // Extract materials
-    this.materialKeywords.forEach(material => {
+    materialTypes.forEach(material => {
       if (query.toLowerCase().includes(material)) {
         result.materials.push(material);
       }
     });
 
-    // Extract remaining text for fuzzy search
-    let remainingText = query;
-    [...result.colors, ...result.materials].forEach(term => {
-      remainingText = remainingText.replace(new RegExp(term, 'gi'), '');
+    // Simple color detection using chroma.valid()
+    const words = query.toLowerCase().split(/\s+/);
+    
+    // Check two-word combinations first
+    for (let i = 0; i < words.length - 1; i++) {
+      const twoWord = `${words[i]} ${words[i + 1]}`;
+      const twoWordNoSpace = `${words[i]}${words[i + 1]}`;
+      
+      if (chroma.valid(twoWord) || chroma.valid(twoWordNoSpace)) {
+        result.colors.push(twoWord);
+        words[i] = ''; // Mark as used
+        words[i + 1] = ''; // Mark as used
+      }
+    }
+    
+    // Check single words
+    words.forEach(word => {
+      if (word && chroma.valid(word)) {
+        result.colors.push(word);
+      }
     });
-    
-    // Remove weight expressions and operators
-    remainingText = remainingText.replace(weightPattern, '');
-    remainingText = remainingText.replace(operatorPattern, '');
-    remainingText = remainingText.replace(/\b(with|left|remaining|grams?|kg|kilograms?)\b/gi, '');
-    
-    const cleanTerms = remainingText.trim().split(/\s+/).filter(term => term.length > 1);
+
+    // Everything else goes to text search
+    const cleanTerms = query.trim().split(/\s+/).filter(term => term.length > 1);
     result.textSearch = cleanTerms;
 
     return result;
@@ -170,7 +137,16 @@ export class FuzzySearchEX {
     });
   }
 
-  search(filaments: Filament[], query: string): EnhancedFilamentResult[] {
+  search(filaments: Filament[], query: string): {
+    results: EnhancedFilamentResult[];
+    categories: {
+      perfectMatches: EnhancedFilamentResult[];
+      goodMatches: EnhancedFilamentResult[];
+      lowQuantityMatches: EnhancedFilamentResult[];
+      fuzzyMatches: EnhancedFilamentResult[];
+    };
+    parsedQuery: ParsedQuery;
+  } {
     const parsedQuery = QueryParser.parseQuery(query);
     const results: EnhancedFilamentResult[] = [];
 
@@ -181,7 +157,10 @@ export class FuzzySearchEX {
       }
     }
 
-    return results.sort((a, b) => b._matchScore - a._matchScore);
+    const sortedResults = results.sort((a, b) => b._matchScore - a._matchScore);
+    const categories = this.categorizeResults(sortedResults, parsedQuery.hasQuantityQuery);
+
+    return { results: sortedResults, categories, parsedQuery };
   }
 
   private scoreFilament(filament: Filament, parsedQuery: ParsedQuery, originalQuery: string): EnhancedFilamentResult {
@@ -190,18 +169,23 @@ export class FuzzySearchEX {
     let colorSimilarity = 0;
     let quantityMatch = false;
 
-    // Weight/quantity matching
+    // Weight matching
     if (parsedQuery.minWeight !== undefined || parsedQuery.maxWeight !== undefined) {
       const weight = filament.weightRemaining;
       if (parsedQuery.minWeight !== undefined && weight >= parsedQuery.minWeight) {
-        score += 20;
+        score += 25;
         quantityMatch = true;
         matchReasons.push(`Has ${weight}g (≥${parsedQuery.minWeight}g)`);
       }
       if (parsedQuery.maxWeight !== undefined && weight <= parsedQuery.maxWeight) {
-        score += 20;
+        score += 25;
         quantityMatch = true;
         matchReasons.push(`Has ${weight}g (≤${parsedQuery.maxWeight}g)`);
+      }
+      
+      if (parsedQuery.minWeight !== undefined && weight < parsedQuery.minWeight) {
+        score -= 15;
+        matchReasons.push(`Low quantity: ${weight}g (need ${parsedQuery.minWeight}g)`);
       }
     }
 
@@ -209,11 +193,22 @@ export class FuzzySearchEX {
     if (parsedQuery.colors.length > 0) {
       for (const queryColor of parsedQuery.colors) {
         const similarity = ColorMatcher.getColorSimilarity(queryColor, filament.color);
-        if (similarity > 50) {
-          score += Math.round(similarity / 5); // Scale down
-          colorSimilarity = Math.max(colorSimilarity, similarity);
-          matchReasons.push(`Color similar to ${queryColor} (${Math.round(similarity)}%)`);
+        
+        if (similarity > 80) {
+          score += 40;
+          matchReasons.push(`Excellent color: ${queryColor} → ${filament.color} (${Math.round(similarity)}%)`);
+        } else if (similarity > 60) {
+          score += 25;
+          matchReasons.push(`Good color: ${queryColor} → ${filament.color} (${Math.round(similarity)}%)`);
+        } else if (similarity > 40) {
+          score += 12;
+          matchReasons.push(`Fair color: ${queryColor} → ${filament.color} (${Math.round(similarity)}%)`);
+        } else if (similarity > 20) {
+          score += 5;
+          matchReasons.push(`Weak color: ${queryColor} → ${filament.color} (${Math.round(similarity)}%)`);
         }
+        
+        colorSimilarity = Math.max(colorSimilarity, similarity);
       }
     }
 
@@ -221,42 +216,24 @@ export class FuzzySearchEX {
     if (parsedQuery.materials.length > 0) {
       for (const material of parsedQuery.materials) {
         if (filament.materialType.toLowerCase().includes(material)) {
-          score += 15;
+          score += 20;
           matchReasons.push(`Material: ${material.toUpperCase()}`);
         }
       }
     }
 
-    // Fuzzy text search
-    if (parsedQuery.textSearch.length > 0) {
-      const searchFields = [filament.name, filament.brand, filament.notes || ''];
-      const searchText = searchFields.join(' ').toLowerCase();
-      
-      for (const term of parsedQuery.textSearch) {
-        // Exact match
-        if (searchText.includes(term.toLowerCase())) {
-          score += 10;
-          matchReasons.push(`Contains "${term}"`);
-        } else {
-          // Fuzzy match using uFuzzy
-          const haystack = [searchText];
-          const idxs = this.uf.filter(haystack, term);
-          if (idxs && idxs.length > 0) {
-            score += 5;
-            matchReasons.push(`Fuzzy match: "${term}"`);
-          }
-        }
-      }
-    }
-
-    // Fallback fuzzy search if no specific criteria matched
-    if (score === 0 && parsedQuery.textSearch.length === 0) {
-      const searchText = [filament.name, filament.brand, filament.color, filament.materialType].join(' ').toLowerCase();
-      const haystack = [searchText];
-      const idxs = this.uf.filter(haystack, originalQuery.toLowerCase());
-      if (idxs && idxs.length > 0) {
-        score += 3;
-        matchReasons.push('General fuzzy match');
+    // uFuzzy text search on the full query
+    const searchText = [filament.name, filament.brand, filament.color, filament.materialType, filament.notes || ''].join(' ').toLowerCase();
+    const haystack = [searchText];
+    const idxs = this.uf.filter(haystack, originalQuery.toLowerCase());
+    
+    if (idxs && idxs.length > 0) {
+      const info = this.uf.info(idxs, haystack, originalQuery.toLowerCase());
+      if (info && info.ranges) {
+        // Score based on match quality (fewer ranges = better match)
+        const fuzzyScore = Math.max(5, 15 - info.ranges.length);
+        score += fuzzyScore;
+        matchReasons.push(`Fuzzy text match`);
       }
     }
 
@@ -269,35 +246,40 @@ export class FuzzySearchEX {
     };
   }
 
-  // Categorize results with enhanced logic
-  categorizeResults(results: EnhancedFilamentResult[]): {
+  private categorizeResults(results: EnhancedFilamentResult[], hasQuantityQuery: boolean): {
     perfectMatches: EnhancedFilamentResult[];
     goodMatches: EnhancedFilamentResult[];
-    colorMatches: EnhancedFilamentResult[];
+    lowQuantityMatches: EnhancedFilamentResult[];
     fuzzyMatches: EnhancedFilamentResult[];
   } {
+    const perfectMatches = results.filter(r => r._matchScore >= 30);
+    const goodMatches = results.filter(r => r._matchScore >= 15 && r._matchScore < 30);
+    
+    const lowQuantityMatches = hasQuantityQuery 
+      ? results.filter(r => 
+          r._matchScore > 0 && 
+          r._matchScore < 15 && 
+          r.matchReason.some(reason => reason.includes('Low quantity'))
+        )
+      : [];
+      
+    const fuzzyMatches = results.filter(r => 
+      r._matchScore > 0 && 
+      r._matchScore < 15 &&
+      !lowQuantityMatches.includes(r)
+    );
+
     return {
-      perfectMatches: results.filter(r => r._matchScore >= 30),
-      goodMatches: results.filter(r => r._matchScore >= 15 && r._matchScore < 30),
-      colorMatches: results.filter(r => r.colorSimilarity && r.colorSimilarity > 70 && r._matchScore < 15),
-      fuzzyMatches: results.filter(r => r._matchScore > 0 && r._matchScore < 15 && (!r.colorSimilarity || r.colorSimilarity <= 70))
+      perfectMatches,
+      goodMatches,
+      lowQuantityMatches,
+      fuzzyMatches
     };
   }
 }
 
 // Export the enhanced search function
-export function fuzzySearchEX(
-  filaments: Filament[],
-  query: string
-): {
-  results: EnhancedFilamentResult[];
-  categories: ReturnType<FuzzySearchEX['categorizeResults']>;
-  parsedQuery: ParsedQuery;
-} {
+export function fuzzySearchEX(filaments: Filament[], query: string) {
   const searcher = new FuzzySearchEX();
-  const results = searcher.search(filaments, query);
-  const categories = searcher.categorizeResults(results);
-  const parsedQuery = QueryParser.parseQuery(query);
-
-  return { results, categories, parsedQuery };
+  return searcher.search(filaments, query);
 }

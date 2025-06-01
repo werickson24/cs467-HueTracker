@@ -59,7 +59,7 @@ const SearchResultsPanel: React.FC<SearchResultsPanelProps> = ({
         onSelectFilament={onSelectFilament} 
       />
       <ResultGroup 
-        title="Close matches" 
+        title="Other matches" 
         results={closeMatches} 
         onSelectFilament={onSelectFilament} 
       />
