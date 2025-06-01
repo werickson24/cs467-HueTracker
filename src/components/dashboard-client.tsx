@@ -33,10 +33,13 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import SignOutButton from '@/components/auth/signout-button';
 import SearchBar from '@/components/search/SearchBar';
 import SearchResultsPanel from '@/components/search/SearchResultsPanel';
-import { fuzzySearch, categorizeResults } from '@/lib/fuzzySearch';
+//import { fuzzySearch, categorizeResults } from '@/lib/fuzzySearch';
+import { FuzzySearchEX, fuzzySearchEX } from '@/lib/fuzzySearchEX';
 import AngledSpoolIcon from '@/components/spoolIcon';
+import { materialTypes } from '@/types/Filament';
+import ColorPicker from '@/components/ColorPicker';
 
-const materialTypes = ['PLA', 'PETG', 'ABS', 'TPU', 'NYLON', 'OTHER'];
+//const materialTypes = ['PLA', 'PETG', 'ABS', 'TPU', 'NYLON', 'OTHER'];
 
 // Add this new type for form validation
 type ValidationErrors = {
@@ -59,7 +62,7 @@ export default function DashboardClient() {
   const [selectedFilament, setSelectedFilament] = useState<Filament | null>(null);
   const [newFilament, setNewFilament] = useState<Partial<Filament>>({});
   const [isEditing, setIsEditing] = useState(false);
-  
+
   // New state for search functionality
   const [searchQuery, setSearchQuery] = useState('');
   const [searchActive, setSearchActive] = useState(false);
@@ -76,24 +79,30 @@ export default function DashboardClient() {
   useEffect(() => {
     fetchFilaments();
   }, []);
-  
+
   // Effect to handle search updates
   useEffect(() => {
     if (!searchQuery.trim()) {
       setSearchActive(false);
       return;
     }
-    
+
     setSearchActive(true);
-    
-    // Define specific keys to search
-    const searchFields: (keyof Pick<Filament, 'name' | 'materialType' | 'brand' | 'color' | 'notes'>)[] = 
-      ['name', 'materialType', 'brand', 'color', 'notes'];
-    
-    const results = fuzzySearch(filaments, searchQuery, searchFields);
-    const categorized = categorizeResults(results);
-    
-    setSearchResults(categorized);
+
+    const { categories } = fuzzySearchEX(filaments, searchQuery);
+
+
+    //const results = fuzzySearch(filaments, searchQuery, searchFields);
+    //const categorized = categorizeResults(results);
+
+    //setSearchResults(categorized);
+    setSearchResults({
+      bestMatches: [...categories.perfectMatches, ...categories.goodMatches],
+      notEnough: categories.colorMatches,
+      closeMatches: categories.fuzzyMatches
+    });
+
+
   }, [searchQuery, filaments]);
 
   const fetchFilaments = async () => {
@@ -239,7 +248,7 @@ export default function DashboardClient() {
     setSelectedFilament(null);
     setIsEditing(false);
   };
-  
+
   // New handler for when a filament is selected from search results
   const handleFilamentSelect = (filament: Filament) => {
     setSearchQuery(''); // Clear search
@@ -271,16 +280,16 @@ export default function DashboardClient() {
       </AppBar>
       <Container maxWidth="lg" sx={{ mt: 4, mb: 4, flex: 1 }}>
         {/* Search Bar */}
-        <SearchBar 
-          query={searchQuery} 
+        <SearchBar
+          query={searchQuery}
           onChange={setSearchQuery}
         />
 
         {/* Search Results or Table */}
         {searchActive ? (
-          <SearchResultsPanel 
-            results={searchResults} 
-            onSelectFilament={handleFilamentSelect} 
+          <SearchResultsPanel
+            results={searchResults}
+            onSelectFilament={handleFilamentSelect}
             query={searchQuery}
           />
         ) : (
@@ -320,11 +329,12 @@ export default function DashboardClient() {
                         ) : (
                           <>
                             <TableCell sx={{
-                              width: 'auto'}}><AngledSpoolIcon fillColor={filament.color} sx={{
-                                width: 50,  // Example fixed width
-                                height: 50, // Example fixed height
-                                display: 'block' // Ensures proper block-level rendering for centering
-                              }}/></TableCell>
+                              width: 'auto'
+                            }}><AngledSpoolIcon fillColor={filament.color} sx={{
+                              width: 50,  // Example fixed width
+                              height: 50, // Example fixed height
+                              display: 'block' // Ensures proper block-level rendering for centering
+                            }} /></TableCell>
                             <TableCell>{filament.name}</TableCell>
                             <TableCell>{filament.materialType}</TableCell>
                             <TableCell>{filament.brand}</TableCell>
@@ -412,17 +422,32 @@ export default function DashboardClient() {
                 error={!!formErrors.brand}
                 helperText={formErrors.brand}
               />
-              <TextField
-                label="Color"
-                value={newFilament.color || ''}
-                onChange={(e) => {
-                  setNewFilament({ ...newFilament, color: e.target.value });
-                  setFormErrors({ ...formErrors, color: '' });
-                }}
-                required
-                error={!!formErrors.color}
-                helperText={formErrors.color}
-              />
+
+              <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2 }}>
+                <TextField
+                  label="Color"
+                  value={newFilament.color || ''}
+                  onChange={(e) => {
+                    setNewFilament({ ...newFilament, color: e.target.value });
+                    setFormErrors({ ...formErrors, color: '' });
+                  }}
+                  required
+                  error={!!formErrors.color}
+                  helperText={formErrors.color}
+                  sx={{ flex: 1 }}
+                />
+                <Box sx={{ mt: 1 }}>
+                  <ColorPicker
+                    value={newFilament.color || '#000000'}
+                    onChange={(color) => {
+                      setNewFilament({ ...newFilament, color });
+                      setFormErrors({ ...formErrors, color: '' });
+                    }}
+                    size={40}
+                  />
+                </Box>
+              </Box>
+
               <TextField
                 label="Weight Remaining (g)"
                 type="number"

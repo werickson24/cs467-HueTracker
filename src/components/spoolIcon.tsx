@@ -1,6 +1,7 @@
 import { SvgIcon, SvgIconProps } from '@mui/material';
 import React from 'react';
 import convert from 'color-convert';
+import chroma from 'chroma-js';
 
 const convertNamedColorToHex = (colorName: string): string | null => {
   // `color-convert` has a named property for named colors to RGB
@@ -45,8 +46,12 @@ const getFilamentColorLookup = (color: string): string => {
   return "#000000";
 };
 
-//convert color using library, else try to convert it using the fall back table
+//convert color using library(s), else try to convert it using the fall back table
 const convertColorUni = (colorString: string): string => {
+  if(chroma.valid(colorString)) {
+    return chroma(colorString).hex();
+  }
+
   const convertedColor = convertNamedColorToHex(colorString);
   if (!convertedColor) {
     const convertedColorTable = getFilamentColorLookup(colorString);
