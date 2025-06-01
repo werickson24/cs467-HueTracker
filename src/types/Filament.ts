@@ -16,3 +16,5 @@ export interface Filament {
 export interface FilamentWithScore extends Filament {
   _matchScore: number;
 }
+
+export const materialTypes = ['PLA', 'PETG', 'ABS', 'TPU', 'NYLON', 'SILK', 'COMPOSITE', 'OTHER'];
