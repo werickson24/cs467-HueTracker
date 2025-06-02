@@ -14,7 +14,6 @@ import {
   Divider,
   IconButton,
   Grid,
-  Paper,
   TextField,
   MenuItem,
   CircularProgress,
@@ -94,7 +93,11 @@ export default function FilamentModal({
     if (!validateForm()) {
       return;
     }
-    onSave(formData);
+    
+    // Create a clean copy of formData without metadata fields
+    const { id, createdAt, updatedAt, ...cleanFormData } = formData;
+    
+    onSave(cleanFormData);
   };
 
   const handleEdit = () => {
@@ -160,17 +163,43 @@ export default function FilamentModal({
             minHeight: '500px',
             display: 'flex',
             flexDirection: 'column',
+            bgcolor: 'background.paper',
+            backgroundImage: 'none',
+            position: 'relative', // For absolute positioning of spool
           }
         }
-
       }}
     >
+      {/* Fixed Spool Icon Overlay */}
+      <Box
+        sx={{
+          position: 'absolute',
+          left: '10%', // Positioned to match the left column
+          top: '50%',
+          transform: 'translateY(-50%)',
+          zIndex: 1,
+          pointerEvents: 'none', // Allow clicks to pass through
+          display: { xs: 'none', md: 'block' }, // Hide on mobile
+        }}
+      >
+        <AngledSpoolIcon
+          fillColor={formData.color || '#000000'}
+          sx={{
+            width: 200,
+            height: 200,
+            filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.1))',
+          }}
+        />
+      </Box>
+
       <DialogTitle sx={{
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
         pb: 1,
         flexShrink: 0,
+        borderBottom: '1px solid',
+        borderColor: 'divider',
       }}>
         <Typography variant="h5" component="div" sx={{ fontWeight: 'bold' }}>
           {isAddMode ? 'Add New Filament' :
@@ -183,225 +212,344 @@ export default function FilamentModal({
       </DialogTitle>
 
       <DialogContent sx={{
-        pt: 1,
+        pt: 2,
         flex: 1,
         display: 'flex',
         flexDirection: 'column',
         minHeight: 0,
-        overflow: 'auto',
+        overflow: 'auto', // Allow scrolling
       }}>
-        {isViewMode ? (
-          // View Mode Layout
-          <Grid container spacing={3} sx={{ flex: 1 }}>
-            <Grid size={{ xs: 12, md: 4 }}>
-              <Paper
-                elevation={2}
+        {/* Grid Layout - Left column is now transparent spacer */}
+        <Grid container spacing={2} sx={{ flex: 1 }}>
+          {/* Left Column - Transparent Spacer for Spool Icon */}
+          <Grid size={{ xs: 12, md: 4 }}>
+            {/* Empty space that the absolute positioned spool occupies */}
+            <Box sx={{ 
+              height: '200px', 
+              display: { xs: 'flex', md: 'none' }, // Show spool on mobile in normal flow
+              justifyContent: 'center',
+              alignItems: 'center',
+            }}>
+              <AngledSpoolIcon
+                fillColor={formData.color || '#000000'}
                 sx={{
-                  p: 3,
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  bgcolor: '#f8f9fa',
-                  borderRadius: 2,
-                  height: 'fit-content',
+                  width: 120,
+                  height: 120,
+                  filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.1))',
                 }}
-              >
-                <AngledSpoolIcon
-                  fillColor={formData.color || '#000000'}
-                  sx={{
-                    width: 150,
-                    height: 150,
-                    mb: 2,
-                  }}
-                />
-                <Box
-                  sx={{
-                    width: 40,
-                    height: 40,
-                    borderRadius: '50%',
-                    backgroundColor: formData.color,
-                    border: '2px solid #ddd',
-                    boxShadow: 1,
-                  }}
-                />
-                <Typography variant="caption" sx={{ mt: 1, textAlign: 'center' }}>
-                  Color: {formData.color}
-                </Typography>
-              </Paper>
-            </Grid>
-
-            <Grid size={{ xs: 12, md: 8 }}>
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, height: '100%' }}>
-                <Box>
-                  <Typography variant="h6" gutterBottom sx={{ color: 'primary.main', fontWeight: 'bold' }}>
-                    Basic Information
-                  </Typography>
-                  <Grid container spacing={2}>
-                    <Grid size={{ xs: 6 }}>
-                      <Typography variant="body2" color="text.secondary">Material Type</Typography>
-                      <Chip label={formData.materialType} color="primary" variant="outlined" sx={{ fontWeight: 'bold' }} />
-                    </Grid>
-                    <Grid size={{ xs: 6 }}>
-                      <Typography variant="body2" color="text.secondary">Brand</Typography>
-                      <Typography variant="body1" sx={{ fontWeight: 'medium' }}>{formData.brand}</Typography>
-                    </Grid>
-                  </Grid>
-                </Box>
-
-                <Divider />
-
-                <Box>
-                  <Typography variant="h6" gutterBottom sx={{ color: 'primary.main', fontWeight: 'bold' }}>
-                    Weight Information
-                  </Typography>
-                  <Grid container spacing={2}>
-                    <Grid size={{ xs: 6 }}>
-                      <Typography variant="body2" color="text.secondary">Weight Remaining</Typography>
-                      <Typography variant="h6" sx={{ fontWeight: 'bold', color: 'success.main' }}>
-                        {formData.weightRemaining}g
-                      </Typography>
-                    </Grid>
-                    <Grid size={{ xs: 6 }}>
-                      <Typography variant="body2" color="text.secondary">Spool Weight</Typography>
-                      <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
-                        {formData.spoolWeight}g
-                      </Typography>
-                    </Grid>
-                  </Grid>
-                </Box>
-
-                {formData.notes && (
-                  <>
-                    <Divider />
-                    <Box>
-                      <Typography variant="h6" gutterBottom sx={{ color: 'primary.main', fontWeight: 'bold' }}>
-                        Notes
-                      </Typography>
-                      <Paper elevation={1} sx={{ p: 2, bgcolor: '#f8f9fa', borderRadius: 1 }}>
-                        <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
-                          {formData.notes}
-                        </Typography>
-                      </Paper>
-                    </Box>
-                  </>
-                )}
-
-                {/* Always render metadata section if we have display data */}
-                {displayFilament && (
-                  <>
-                    <Divider />
-                    <Box>
-                      <Typography variant="h6" gutterBottom sx={{ color: 'primary.main', fontWeight: 'bold' }}>
-                        Metadata
-                      </Typography>
-                      <Grid container spacing={2}>
-                        <Grid size={{ xs: 6 }}>
-                          <Typography variant="body2" color="text.secondary">Created</Typography>
-                          <Typography variant="body2">{formatDate(displayFilament.createdAt)}</Typography>
-                        </Grid>
-                        <Grid size={{ xs: 6 }}>
-                          <Typography variant="body2" color="text.secondary">Last Updated</Typography>
-                          <Typography variant="body2">{formatDate(displayFilament.updatedAt)}</Typography>
-                        </Grid>
-                      </Grid>
-                    </Box>
-                  </>
-                )}
-              </Box>
-            </Grid>
-          </Grid>
-        ) : (
-          // Edit/Add Mode Layout
-          <Box sx={{
-            flex: 1,
-            display: 'flex',
-            flexDirection: 'column',
-            gap: 2,
-            mt: 2,
-            minHeight: '400px',
-          }}>
-            <TextField
-              label="Name"
-              value={formData.name || ''}
-              onChange={(e) => updateField('name', e.target.value)}
-              required
-              error={!!formErrors.name}
-              helperText={formErrors.name}
-            />
-            <TextField
-              select
-              label="Material Type"
-              value={formData.materialType || ''}
-              onChange={(e) => updateField('materialType', e.target.value)}
-              required
-              error={!!formErrors.materialType}
-              helperText={formErrors.materialType}
-            >
-              {materialTypes.map((type) => (
-                <MenuItem key={type} value={type}>
-                  {type}
-                </MenuItem>
-              ))}
-            </TextField>
-            <TextField
-              label="Brand"
-              value={formData.brand || ''}
-              onChange={(e) => updateField('brand', e.target.value)}
-              required
-              error={!!formErrors.brand}
-              helperText={formErrors.brand}
-            />
-
-            <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2 }}>
-              <TextField
-                label="Color"
-                value={formData.color || ''}
-                onChange={(e) => updateField('color', e.target.value)}
-                required
-                error={!!formErrors.color}
-                helperText={formErrors.color}
-                sx={{ flex: 1 }}
               />
-              <Box sx={{ mt: 1 }}>
-                <ColorPicker
-                  value={formData.color || '#000000'}
-                  onChange={(color) => updateField('color', color)}
-                  size={40}
-                />
-              </Box>
             </Box>
+          </Grid>
 
-            <TextField
-              label="Weight Remaining (g)"
-              type="number"
-              value={formData.weightRemaining ?? ''}
-              onChange={(e) => updateField('weightRemaining', Number(e.target.value))}
-              inputProps={{ min: 0 }}
-            />
-            <TextField
-              label="Spool Weight (g)"
-              type="number"
-              value={formData.spoolWeight ?? ''}
-              onChange={(e) => updateField('spoolWeight', Number(e.target.value))}
-              inputProps={{ min: 0 }}
-            />
-            <TextField
-              label="Notes"
-              multiline
-              rows={3}
-              value={formData.notes || ''}
-              onChange={(e) => updateField('notes', e.target.value)}
-            />
-          </Box>
-        )}
+          {/* Right Column - Form/Details */}
+          <Grid size={{ xs: 12, md: 8 }}>
+            <Box sx={{ 
+              display: 'flex', 
+              flexDirection: 'column', 
+              gap: 1.5,
+              minHeight: '400px', // Ensure minimum height
+            }}>
+              
+              {/* Basic Information Section */}
+              <Box>
+                <Typography variant="h6" gutterBottom sx={{ 
+                  color: 'primary.main', 
+                  fontWeight: 'bold',
+                  mt: 4,
+                }}>
+                  Basic Information
+                </Typography>
+                
+                <Grid container spacing={1.5}>
+                  <Grid size={{ xs: 12 }}>
+                    {isViewMode ? (
+                      <>
+                        <Typography variant="body2" color="text.secondary" gutterBottom>
+                          Name
+                        </Typography>
+                        <Typography variant="h6" sx={{ fontWeight: 'medium', mb: 1 }}>
+                          {formData.name}
+                        </Typography>
+                      </>
+                    ) : (
+                      <TextField
+                        fullWidth
+                        label="Name"
+                        value={formData.name || ''}
+                        onChange={(e) => updateField('name', e.target.value)}
+                        required
+                        error={!!formErrors.name}
+                        helperText={formErrors.name}
+                        size="small"
+                      />
+                    )}
+                  </Grid>
+                  
+                  <Grid size={{ xs: 12, sm: 6 }}>
+                    {isViewMode ? (
+                      <>
+                        <Typography variant="body2" color="text.secondary" gutterBottom>
+                          Material Type
+                        </Typography>
+                        <Chip 
+                          label={formData.materialType} 
+                          color="primary" 
+                          variant="outlined" 
+                          sx={{ fontWeight: 'bold' }} 
+                        />
+                      </>
+                    ) : (
+                      <TextField
+                        fullWidth
+                        select
+                        label="Material Type"
+                        value={formData.materialType || ''}
+                        onChange={(e) => updateField('materialType', e.target.value)}
+                        required
+                        error={!!formErrors.materialType}
+                        helperText={formErrors.materialType}
+                        size="small"
+                      >
+                        {materialTypes.map((type) => (
+                          <MenuItem key={type} value={type}>
+                            {type}
+                          </MenuItem>
+                        ))}
+                      </TextField>
+                    )}
+                  </Grid>
+                  
+                  <Grid size={{ xs: 12, sm: 6 }}>
+                    {isViewMode ? (
+                      <>
+                        <Typography variant="body2" color="text.secondary" gutterBottom>
+                          Brand
+                        </Typography>
+                        <Typography variant="body1" sx={{ fontWeight: 'medium' }}>
+                          {formData.brand}
+                        </Typography>
+                      </>
+                    ) : (
+                      <TextField
+                        fullWidth
+                        label="Brand"
+                        value={formData.brand || ''}
+                        onChange={(e) => updateField('brand', e.target.value)}
+                        required
+                        error={!!formErrors.brand}
+                        helperText={formErrors.brand}
+                        size="small"
+                      />
+                    )}
+                  </Grid>
+                  
+                  {/* Color Section */}
+                  <Grid size={{ xs: 12 }}>
+                    {isViewMode ? (
+                      <>
+                        <Typography variant="body2" color="text.secondary" gutterBottom>
+                          Color
+                        </Typography>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                          <Box
+                            sx={{
+                              width: 28,
+                              height: 28,
+                              borderRadius: '50%',
+                              backgroundColor: formData.color,
+                              border: '2px solid',
+                              borderColor: 'divider',
+                              boxShadow: 1,
+                              flexShrink: 0,
+                            }}
+                          />
+                          <Typography variant="body2" sx={{ fontFamily: 'monospace' }}>
+                            {formData.color}
+                          </Typography>
+                        </Box>
+                      </>
+                    ) : (
+                      <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.5 }}>
+                        <TextField
+                          label="Color"
+                          value={formData.color || ''}
+                          onChange={(e) => updateField('color', e.target.value)}
+                          required
+                          error={!!formErrors.color}
+                          helperText={formErrors.color}
+                          sx={{ flex: 1 }}
+                          size="small"
+                        />
+                        <Box sx={{ mt: 0.5 }}>
+                          <ColorPicker
+                            value={formData.color || '#000000'}
+                            onChange={(color) => updateField('color', color)}
+                            size={32}
+                          />
+                        </Box>
+                      </Box>
+                    )}
+                  </Grid>
+                </Grid>
+              </Box>
+
+              <Divider sx={{ my: 0.5 }} />
+
+              {/* Weight Information Section */}
+              <Box>
+                <Typography variant="h6" gutterBottom sx={{ 
+                  color: 'primary.main', 
+                  fontWeight: 'bold',
+                  mb: 1,
+                }}>
+                  Weight Information
+                </Typography>
+                
+                <Grid container spacing={1.5}>
+                  <Grid size={{ xs: 6 }}>
+                    {isViewMode ? (
+                      <>
+                        <Typography variant="body2" color="text.secondary" gutterBottom>
+                          Weight Remaining
+                        </Typography>
+                        <Typography variant="h6" sx={{ fontWeight: 'bold', color: 'success.main' }}>
+                          {formData.weightRemaining}g
+                        </Typography>
+                      </>
+                    ) : (
+                      <TextField
+                        fullWidth
+                        label="Weight Remaining (g)"
+                        type="number"
+                        value={formData.weightRemaining ?? ''}
+                        onChange={(e) => updateField('weightRemaining', Number(e.target.value))}
+                        inputProps={{ min: 0 }}
+                        size="small"
+                      />
+                    )}
+                  </Grid>
+                  
+                  <Grid size={{ xs: 6 }}>
+                    {isViewMode ? (
+                      <>
+                        <Typography variant="body2" color="text.secondary" gutterBottom>
+                          Spool Weight
+                        </Typography>
+                        <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
+                          {formData.spoolWeight}g
+                        </Typography>
+                      </>
+                    ) : (
+                      <TextField
+                        fullWidth
+                        label="Spool Weight (g)"
+                        type="number"
+                        value={formData.spoolWeight ?? ''}
+                        onChange={(e) => updateField('spoolWeight', Number(e.target.value))}
+                        inputProps={{ min: 0 }}
+                        size="small"
+                      />
+                    )}
+                  </Grid>
+                </Grid>
+              </Box>
+
+              <Divider sx={{ my: 0.5 }} />
+
+              {/* Notes Section */}
+              <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+                <Typography variant="h6" gutterBottom sx={{ 
+                  color: 'primary.main', 
+                  fontWeight: 'bold',
+                  mb: 1,
+                }}>
+                  Notes
+                </Typography>
+                
+                {isViewMode ? (
+                  formData.notes ? (
+                    <Box
+                      sx={{
+                        p: 1.5,
+                        bgcolor: 'action.hover',
+                        borderRadius: 1,
+                        border: '1px solid',
+                        borderColor: 'divider',
+                        minHeight: '60px',
+                        maxHeight: '200px',
+                        overflow: 'auto',
+                      }}
+                    >
+                      <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
+                        {formData.notes}
+                      </Typography>
+                    </Box>
+                  ) : (
+                    <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic' }}>
+                      No notes available
+                    </Typography>
+                  )
+                ) : (
+                  <TextField
+                    fullWidth
+                    label="Notes"
+                    multiline
+                    minRows={3}
+                    maxRows={8}
+                    value={formData.notes || ''}
+                    onChange={(e) => updateField('notes', e.target.value)}
+                    placeholder="Add any notes about this filament..."
+                    size="small"
+                  />
+                )}
+              </Box>
+
+              {/* Metadata Section - Only show in view mode and if we have data */}
+              {isViewMode && displayFilament && (
+                <>
+                  <Divider sx={{ my: 0.5 }} />
+                  <Box>
+                    <Typography variant="h6" gutterBottom sx={{ 
+                      color: 'primary.main', 
+                      fontWeight: 'bold',
+                      mb: 1,
+                    }}>
+                      Metadata
+                    </Typography>
+                    
+                    <Grid container spacing={1.5}>
+                      <Grid size={{ xs: 6 }}>
+                        <Typography variant="body2" color="text.secondary" gutterBottom>
+                          Created
+                        </Typography>
+                        <Typography variant="body2">
+                          {formatDate(displayFilament.createdAt)}
+                        </Typography>
+                      </Grid>
+                      <Grid size={{ xs: 6 }}>
+                        <Typography variant="body2" color="text.secondary" gutterBottom>
+                          Last Updated
+                        </Typography>
+                        <Typography variant="body2">
+                          {formatDate(displayFilament.updatedAt)}
+                        </Typography>
+                      </Grid>
+                    </Grid>
+                  </Box>
+                </>
+              )}
+            </Box>
+          </Grid>
+        </Grid>
       </DialogContent>
 
       <DialogActions sx={{
-        p: 3,
-        pt: 1,
+        p: 2,
+        pt: 1.5,
         flexShrink: 0,
         borderTop: '1px solid',
         borderColor: 'divider',
+        gap: 1,
       }}>
         {isViewMode ? (
           // View Mode Actions
