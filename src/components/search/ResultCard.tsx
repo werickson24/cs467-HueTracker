@@ -11,15 +11,14 @@ interface ResultCardProps {
 }
 
 const ResultCard: React.FC<ResultCardProps> = ({ filament, onClick }) => {
-
-    const tooltipContent = Object.entries(filament)
+  const tooltipContent = Object.entries(filament)
     .map(([key, value]) => `${key}: ${value}`)
     .join('\n');
 
   return (
     <Card
       sx={{
-        width: 200, // Slightly wider for better display of angled spool
+        width: 200,
         height: 250,
         m: 1,
         cursor: 'pointer',
@@ -40,41 +39,35 @@ const ResultCard: React.FC<ResultCardProps> = ({ filament, onClick }) => {
       <CardMedia
         sx={{
           height: '65%',
-          bgcolor: '#333', // Dark background like in your image
+          bgcolor: '#333',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
         }}
       >
-      <AngledSpoolIcon fillColor={filament.color} sx={{ width: '100%', height: '100%' }} />
+        <AngledSpoolIcon fillColor={filament.color} sx={{ width: '100%', height: '100%' }} />
       </CardMedia>
       <CardContent
         sx={{
           p: 1,
-          pb: '8px !important', // Override default padding bottom
+          pb: '8px !important',
           height: '35%',
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'center',
         }}
       >
-        <Typography
-        variant='caption'
-        noWrap
-        >
-            {filament.brand || 'N/A'}
+        <Typography variant='caption' noWrap>
+          {filament.brand || 'N/A'}
         </Typography>
         <Typography
           variant="subtitle1"
           noWrap
-          sx={{fontWeight: 'bold', textTransform: 'capitalize'}}
+          sx={{ fontWeight: 'bold', textTransform: 'capitalize' }}
         >
-          {filament.name|| 'Unnamed'}
+          {filament.name || 'Unnamed'}
         </Typography>
-        <Typography
-          variant="caption"
-          noWrap
-        >
+        <Typography variant="caption" noWrap>
           {filament.materialType || 'N/A'} • {`${filament.weightRemaining}g` || 'N/A'}
         </Typography>
       </CardContent>

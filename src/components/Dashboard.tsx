@@ -12,26 +12,37 @@ import SearchResultsPanel from '@/components/search/SearchResultsPanel';
 import { fuzzySearchEX } from '@/lib/fuzzySearchEX';
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
 import FilamentTable from '@/components/dashboard/FilamentTable';
-import FilamentDialog from '@/components/dashboard/FilamentDialog';
 import DeleteConfirmationDialog from '@/components/dashboard/DeleteConfirmationDialog';
 import LoadingSpinner from '@/components/dashboard/LoadingSpinner';
+import FilamentModal from '@/components/dashboard/FilamentModal';
 
 type LoadingStates = {
   [key: string]: boolean;
+};
+
+type ModalState = {
+  open: boolean;
+  mode: 'view' | 'edit' | 'add';
+  filament: Filament | null;
 };
 
 export default function DashboardClient() {
   const [filaments, setFilaments] = useState<Filament[]>([]);
   const [loadingStates, setLoadingStates] = useState<LoadingStates>({
     initial: true,
-    add: false,
     dialog: false,
   });
-  const [openDialog, setOpenDialog] = useState(false);
-  const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
-  const [selectedFilament, setSelectedFilament] = useState<Filament | null>(null);
-  const [isEditing, setIsEditing] = useState(false);
   
+  // Simplified modal state
+  const [modalState, setModalState] = useState<ModalState>({
+    open: false,
+    mode: 'view',
+    filament: null,
+  });
+  
+  const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
+  const [filamentToDelete, setFilamentToDelete] = useState<Filament | null>(null);
+
   // Search functionality state
   const [searchQuery, setSearchQuery] = useState('');
   const [searchActive, setSearchActive] = useState(false);
@@ -50,16 +61,14 @@ export default function DashboardClient() {
   useEffect(() => {
     fetchFilaments();
   }, []);
-  
-  // Effect to handle search updates
+
   useEffect(() => {
     if (!searchQuery.trim()) {
       setSearchActive(false);
       return;
     }
-    
+
     setSearchActive(true);
-    
     const { categories } = fuzzySearchEX(filaments, searchQuery);
     
     setSearchResults({
@@ -94,8 +103,9 @@ export default function DashboardClient() {
         spoolWeight: Number(filamentData.spoolWeight) || 0,
       };
 
-      const url = isEditing && selectedFilament
-        ? `/api/filaments/${selectedFilament.id}`
+      const isEditing = modalState.mode === 'edit';
+      const url = isEditing && modalState.filament
+        ? `/api/filaments/${modalState.filament.id}`
         : '/api/filaments';
 
       const response = await fetch(url, {
@@ -111,42 +121,69 @@ export default function DashboardClient() {
         throw new Error(`Failed to ${isEditing ? 'update' : 'add'} filament: ${response.status} - ${errorBody}`);
       }
 
-      if (isEditing && selectedFilament) {
+      if (isEditing && modalState.filament) {
         const updatedFilament = await response.json();
         setFilaments(prev => prev.map(f =>
-          f.id === selectedFilament.id ? updatedFilament : f
+          f.id === modalState.filament!.id ? updatedFilament : f
         ));
+        // Update modal state with new data
+        setModalState(prev => ({ ...prev, filament: updatedFilament, mode: 'view' }));
       } else {
         const newFilamentData = await response.json();
         setFilaments(prev => [...prev, newFilamentData]);
+        closeModal();
       }
-
-      handleDialogClose();
     } catch (error) {
-      console.error(`Error ${isEditing ? 'updating' : 'adding'} filament:`, error);
+      console.error(`Error ${modalState.mode === 'edit' ? 'updating' : 'adding'} filament:`, error);
     } finally {
       setLoadingStates(prev => ({ ...prev, dialog: false }));
     }
   };
 
-  const handleEditClick = (filament: Filament) => {
-    setSelectedFilament(filament);
-    setIsEditing(true);
-    setOpenDialog(true);
+  const handleViewFilament = (filament: Filament) => {
+    setModalState({
+      open: true,
+      mode: 'view',
+      filament,
+    });
+  };
+
+  const handleEditFilament = (filament: Filament) => {
+    setModalState({
+      open: true,
+      mode: 'edit',
+      filament,
+    });
+  };
+
+  const handleAddNew = () => {
+    setModalState({
+      open: true,
+      mode: 'add',
+      filament: null,
+    });
+  };
+
+  const closeModal = () => {
+    setModalState({
+      open: false,
+      mode: 'view',
+      filament: null,
+    });
   };
 
   const handleDeleteClick = (filament: Filament) => {
-    setSelectedFilament(filament);
+    setFilamentToDelete(filament);
     setOpenDeleteDialog(true);
   };
 
   const handleDelete = async () => {
-    if (!selectedFilament) return;
+    if (!filamentToDelete) return;
 
     try {
       setLoadingStates(prev => ({ ...prev, dialog: true }));
 
-      const response = await fetch(`/api/filaments/${selectedFilament.id}`, {
+      const response = await fetch(`/api/filaments/${filamentToDelete.id}`, {
         method: 'DELETE',
       });
 
@@ -154,31 +191,19 @@ export default function DashboardClient() {
         throw new Error('Failed to delete filament');
       }
 
-      setFilaments(prev => prev.filter(f => f.id !== selectedFilament.id));
+      setFilaments(prev => prev.filter(f => f.id !== filamentToDelete.id));
       setOpenDeleteDialog(false);
-      setSelectedFilament(null);
+      setFilamentToDelete(null);
+      
+      // Close modal if we're viewing the deleted filament
+      if (modalState.filament?.id === filamentToDelete.id) {
+        closeModal();
+      }
     } catch (error) {
       console.error('Error deleting filament:', error);
     } finally {
       setLoadingStates(prev => ({ ...prev, dialog: false }));
     }
-  };
-
-  const handleDialogClose = () => {
-    setOpenDialog(false);
-    setSelectedFilament(null);
-    setIsEditing(false);
-  };
-  
-  const handleFilamentSelect = (filament: Filament) => {
-    setSearchQuery('');
-    handleEditClick(filament);
-  };
-
-  const handleAddNew = () => {
-    setIsEditing(false);
-    setSelectedFilament(null);
-    setOpenDialog(true);
   };
 
   if (loadingStates.initial) {
@@ -188,14 +213,14 @@ export default function DashboardClient() {
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
       <DashboardHeader />
-      
+
       <Container maxWidth="lg" sx={{ mt: 4, mb: 4, flex: 1 }}>
         <SearchBar query={searchQuery} onChange={setSearchQuery} />
 
         {searchActive ? (
-          <SearchResultsPanel 
-            results={searchResults} 
-            onSelectFilament={handleFilamentSelect} 
+          <SearchResultsPanel
+            results={searchResults}
+            onSelectFilament={handleViewFilament}
             query={searchQuery}
           />
         ) : (
@@ -203,8 +228,9 @@ export default function DashboardClient() {
             <FilamentTable
               filaments={filaments}
               loadingStates={loadingStates}
-              onEdit={handleEditClick}
+              onEdit={handleEditFilament}
               onDelete={handleDeleteClick}
+              onView={handleViewFilament}
             />
             <Box display="flex" justifyContent="end" alignItems="center" mb={1} sx={{ mt: 2 }}>
               <Button variant="contained" onClick={handleAddNew}>
@@ -214,18 +240,19 @@ export default function DashboardClient() {
           </>
         )}
 
-        <FilamentDialog
-          open={openDialog}
-          filament={selectedFilament}
-          isEditing={isEditing}
-          isLoading={loadingStates.dialog}
-          onClose={handleDialogClose}
+        <FilamentModal
+          open={modalState.open}
+          filament={modalState.filament}
+          mode={modalState.mode}
+          onClose={closeModal}
           onSave={handleSaveFilament}
+          onDelete={handleDeleteClick}
+          isLoading={loadingStates.dialog}
         />
 
         <DeleteConfirmationDialog
           open={openDeleteDialog}
-          filament={selectedFilament}
+          filament={filamentToDelete}
           isLoading={loadingStates.dialog}
           onClose={() => setOpenDeleteDialog(false)}
           onConfirm={handleDelete}

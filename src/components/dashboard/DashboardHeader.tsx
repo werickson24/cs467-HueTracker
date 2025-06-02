@@ -6,7 +6,7 @@ import SignOutButton from '@/components/auth/signout-button';
 
 export default function DashboardHeader() {
   return (
-    <AppBar position="static" color="default" elevation={1}>
+    <AppBar position="static" color="default" elevation={4}>
       <Toolbar sx={{ justifyContent: 'space-between' }}>
         <Image
           src="/HueTracker_Logo_transparent.svg"
