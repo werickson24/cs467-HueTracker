@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Box, Typography, Paper } from '@mui/material';
-import ResultGroup from './ResultGroup';
+import ResultGroup from '@/components/search/ResultGroup';
 import { Filament, FilamentWithScore } from '@/types/Filament';
 
 interface SearchResultsPanelProps {
