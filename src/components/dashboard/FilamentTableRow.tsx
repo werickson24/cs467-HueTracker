@@ -46,8 +46,8 @@ export default function FilamentTableRow({
         <AngledSpoolIcon 
           fillColor={filament.color} 
           sx={{
-            width: 50,
-            height: 50,
+            width: 60,
+            height: 60,
             display: 'block'
           }}
         />

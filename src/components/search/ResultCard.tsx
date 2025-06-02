@@ -67,9 +67,9 @@ const ResultCard: React.FC<ResultCardProps> = ({ filament, onClick }) => {
         <Typography
           variant="subtitle1"
           noWrap
-          sx={{fontWeight: 'bold'}}
+          sx={{fontWeight: 'bold', textTransform: 'capitalize'}}
         >
-          {filament.name.toLocaleUpperCase() || 'Unnamed'}
+          {filament.name|| 'Unnamed'}
         </Typography>
         <Typography
           variant="caption"

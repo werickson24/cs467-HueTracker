@@ -13,7 +13,7 @@ export default function DashboardHeader() {
           alt="Logo"
           width={150}
           height={100}
-          style={{ marginTop: '8px', marginBottom: '8px' }}
+          style={{ marginTop: '16px', marginBottom: '16px' }}
         />
         <SignOutButton />
       </Toolbar>
