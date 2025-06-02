@@ -70,7 +70,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
 
   return (
     <Paper
-      elevation={focused ? 3 : 1}
+      elevation={focused ? 6 : 3}
       sx={{
         p: '2px 4px',
         display: 'flex',

@@ -19,13 +19,15 @@ interface FilamentTableRowProps {
   isLoading: boolean;
   onEdit: (filament: Filament) => void;
   onDelete: (filament: Filament) => void;
+  onView?: (filament: Filament) => void; // New prop for viewing details
 }
 
 export default function FilamentTableRow({ 
   filament, 
   isLoading, 
   onEdit, 
-  onDelete 
+  onDelete,
+  onView
 }: FilamentTableRowProps) {
   if (isLoading) {
     return (
@@ -40,8 +42,27 @@ export default function FilamentTableRow({
     );
   }
 
+  const handleRowClick = (event: React.MouseEvent) => {
+    // Prevent row click when clicking action buttons
+    if ((event.target as HTMLElement).closest('button')) {
+      return;
+    }
+    if (onView) {
+      onView(filament);
+    }
+  };
+
   return (
-    <TableRow>
+    <TableRow 
+      hover
+      sx={{ 
+        cursor: onView ? 'pointer' : 'default',
+        '&:hover': onView ? {
+          backgroundColor: 'action.hover',
+        } : {}
+      }}
+      onClick={handleRowClick}
+    >
       <TableCell sx={{ width: 'auto' }}>
         <AngledSpoolIcon 
           fillColor={filament.color} 
