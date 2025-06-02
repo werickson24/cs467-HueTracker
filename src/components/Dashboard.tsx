@@ -39,17 +39,17 @@ export default function DashboardClient() {
     initial: true,
     dialog: false,
   });
-  
+
   // View mode state
   const [viewMode, setViewMode] = useState<ViewMode>('table');
-  
+
   // Simplified modal state
   const [modalState, setModalState] = useState<ModalState>({
     open: false,
     mode: 'view',
     filament: null,
   });
-  
+
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
   const [filamentToDelete, setFilamentToDelete] = useState<Filament | null>(null);
 
@@ -80,7 +80,7 @@ export default function DashboardClient() {
 
     setSearchActive(true);
     const { categories } = fuzzySearchEX(filaments, searchQuery);
-    
+
     setSearchResults({
       bestMatches: categories.perfectMatches,
       closeMatches: categories.goodMatches,
@@ -114,21 +114,25 @@ export default function DashboardClient() {
 
   // Helper function to clean filament data for API calls
   const cleanFilamentData = (filamentData: Partial<Filament>) => {
-    // Remove properties that shouldn't be sent to the API
-    const {
-      _matchScore,
-      matchReason,
-      colorSimilarity,
-      quantityMatch,
-      metMaterialCriteria,
-      metWeightCriteria,
-      metColorCriteria,
-      id,
-      createdAt,
-      updatedAt,
-      userId,
-      ...cleanData
-    } = filamentData as any;
+    // List of properties to exclude from the API payload
+    const excludedProperties = [
+      '_matchScore',
+      'matchReason',
+      'colorSimilarity',
+      'quantityMatch',
+      'metMaterialCriteria',
+      'metWeightCriteria',
+      'metColorCriteria',
+      'id',
+      'createdAt',
+      'updatedAt',
+      'userId'
+    ];
+
+    // Filter out excluded properties
+    const cleanData = Object.fromEntries(
+      Object.entries(filamentData).filter(([key]) => !excludedProperties.includes(key))
+    );
 
     return {
       ...cleanData,
@@ -147,11 +151,11 @@ export default function DashboardClient() {
       // This happens when:
       // 1. modalState.mode is 'edit' (direct edit)
       // 2. We have a filament and the data includes an ID (edit from view mode)
-      const isEditing = modalState.mode === 'edit' || 
-                        (modalState.filament && (filamentData.id || modalState.filament.id));
-      
+      const isEditing = modalState.mode === 'edit' ||
+        (modalState.filament && (filamentData.id || modalState.filament.id));
+
       const filamentId = modalState.filament?.id || filamentData.id;
-      
+
       const url = isEditing && filamentId
         ? `/api/filaments/${filamentId}`
         : '/api/filaments';
@@ -251,7 +255,7 @@ export default function DashboardClient() {
       setFilaments(prev => prev.filter(f => f.id !== filamentToDelete.id));
       setOpenDeleteDialog(false);
       setFilamentToDelete(null);
-      
+
       // Close modal if we're viewing the deleted filament
       if (modalState.filament?.id === filamentToDelete.id) {
         closeModal();
@@ -285,10 +289,10 @@ export default function DashboardClient() {
         ) : (
           <>
             {/* View Toggle and Add Button Row */}
-            <Box 
-              display="flex" 
-              justifyContent="space-between" 
-              alignItems="center" 
+            <Box
+              display="flex"
+              justifyContent="space-between"
+              alignItems="center"
               mb={2}
               sx={{ mt: 2 }}
             >
