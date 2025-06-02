@@ -9,9 +9,17 @@ interface ResultGroupProps {
   title: string;
   results: FilamentWithScore[];
   onSelectFilament: (filament: Filament) => void;
+  onEditFilament?: (filament: Filament) => void;
+  onDeleteFilament?: (filament: Filament) => void;
 }
 
-const ResultGroup: React.FC<ResultGroupProps> = ({ title, results, onSelectFilament }) => {
+const ResultGroup: React.FC<ResultGroupProps> = ({ 
+  title, 
+  results, 
+  onSelectFilament,
+  onEditFilament,
+  onDeleteFilament 
+}) => {
   const theme = useTheme();
   
   if (results.length === 0) {
@@ -36,7 +44,9 @@ const ResultGroup: React.FC<ResultGroupProps> = ({ title, results, onSelectFilam
             <FilamentGridItem 
               filament={filament}
               onView={onSelectFilament}
-              showActions={false}
+              onEdit={onEditFilament}
+              onDelete={onDeleteFilament}
+              showActions={true}
             />
           </Grid>
         ))}

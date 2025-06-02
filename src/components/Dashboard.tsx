@@ -112,27 +112,65 @@ export default function DashboardClient() {
     }
   };
 
+  // Helper function to clean filament data for API calls
+  const cleanFilamentData = (filamentData: Partial<Filament>) => {
+    // Remove properties that shouldn't be sent to the API
+    const {
+      _matchScore,
+      matchReason,
+      colorSimilarity,
+      quantityMatch,
+      metMaterialCriteria,
+      metWeightCriteria,
+      metColorCriteria,
+      id,
+      createdAt,
+      updatedAt,
+      userId,
+      ...cleanData
+    } = filamentData as any;
+
+    return {
+      ...cleanData,
+      weightRemaining: Number(cleanData.weightRemaining) || 0,
+      spoolWeight: Number(cleanData.spoolWeight) || 0,
+    };
+  };
+
   const handleSaveFilament = async (filamentData: Partial<Filament>) => {
     try {
       setLoadingStates(prev => ({ ...prev, dialog: true }));
 
-      const filamentDataToSend = {
-        ...filamentData,
-        weightRemaining: Number(filamentData.weightRemaining) || 0,
-        spoolWeight: Number(filamentData.spoolWeight) || 0,
-      };
+      const cleanedData = cleanFilamentData(filamentData);
 
-      const isEditing = modalState.mode === 'edit';
-      const url = isEditing && modalState.filament
-        ? `/api/filaments/${modalState.filament.id}`
+      // Check if we're editing an existing filament
+      // This happens when:
+      // 1. modalState.mode is 'edit' (direct edit)
+      // 2. We have a filament and the data includes an ID (edit from view mode)
+      const isEditing = modalState.mode === 'edit' || 
+                        (modalState.filament && (filamentData.id || modalState.filament.id));
+      
+      const filamentId = modalState.filament?.id || filamentData.id;
+      
+      const url = isEditing && filamentId
+        ? `/api/filaments/${filamentId}`
         : '/api/filaments';
+
+      console.log('Save operation:', {
+        isEditing,
+        filamentId,
+        url,
+        modalMode: modalState.mode,
+        hasFilament: !!modalState.filament,
+        dataHasId: !!filamentData.id
+      });
 
       const response = await fetch(url, {
         method: isEditing ? 'PUT' : 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(filamentDataToSend),
+        body: JSON.stringify(cleanedData),
       });
 
       if (!response.ok) {
@@ -240,6 +278,8 @@ export default function DashboardClient() {
           <SearchResultsPanel
             results={searchResults}
             onSelectFilament={handleViewFilament}
+            onEditFilament={handleEditFilament}
+            onDeleteFilament={handleDeleteClick}
             query={searchQuery}
           />
         ) : (

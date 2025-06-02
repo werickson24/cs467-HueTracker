@@ -13,12 +13,16 @@ interface SearchResultsPanelProps {
     otherMatches: FilamentWithScore[];
   };
   onSelectFilament: (filament: Filament) => void;
+  onEditFilament?: (filament: Filament) => void;
+  onDeleteFilament?: (filament: Filament) => void;
   query: string;
 }
 
 const SearchResultsPanel: React.FC<SearchResultsPanelProps> = ({ 
   results, 
-  onSelectFilament 
+  onSelectFilament,
+  onEditFilament,
+  onDeleteFilament
 }) => {
   const { bestMatches, closeMatches, notEnough, otherMatches } = results;
   const totalResults = bestMatches.length + notEnough.length + closeMatches.length + otherMatches.length;
@@ -52,22 +56,30 @@ const SearchResultsPanel: React.FC<SearchResultsPanelProps> = ({
       <ResultGroup 
         title="Best Matches" 
         results={bestMatches} 
-        onSelectFilament={onSelectFilament} 
+        onSelectFilament={onSelectFilament}
+        onEditFilament={onEditFilament}
+        onDeleteFilament={onDeleteFilament}
       />
       <ResultGroup 
         title="Close matches" 
         results={closeMatches} 
-        onSelectFilament={onSelectFilament} 
+        onSelectFilament={onSelectFilament}
+        onEditFilament={onEditFilament}
+        onDeleteFilament={onDeleteFilament}
       />
       <ResultGroup 
         title="Wrong amount" 
         results={notEnough} 
-        onSelectFilament={onSelectFilament} 
+        onSelectFilament={onSelectFilament}
+        onEditFilament={onEditFilament}
+        onDeleteFilament={onDeleteFilament}
       />
       <ResultGroup 
         title="Other matches" 
         results={otherMatches} 
-        onSelectFilament={onSelectFilament} 
+        onSelectFilament={onSelectFilament}
+        onEditFilament={onEditFilament}
+        onDeleteFilament={onDeleteFilament}
       />
     </Box>
   );
