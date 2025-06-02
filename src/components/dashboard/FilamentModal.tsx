@@ -93,10 +93,10 @@ export default function FilamentModal({
     if (!validateForm()) {
       return;
     }
-    
+
     // Create a clean copy of formData without metadata fields
     const { id, createdAt, updatedAt, ...cleanFormData } = formData;
-    
+
     onSave(cleanFormData);
   };
 
@@ -174,7 +174,7 @@ export default function FilamentModal({
       <Box
         sx={{
           position: 'absolute',
-          left: '10%', // Positioned to match the left column
+          left: '7%', // Positioned to match the left column
           top: '50%',
           transform: 'translateY(-50%)',
           zIndex: 1,
@@ -224,8 +224,8 @@ export default function FilamentModal({
           {/* Left Column - Transparent Spacer for Spool Icon */}
           <Grid size={{ xs: 12, md: 4 }}>
             {/* Empty space that the absolute positioned spool occupies */}
-            <Box sx={{ 
-              height: '200px', 
+            <Box sx={{
+              height: '200px',
               display: { xs: 'flex', md: 'none' }, // Show spool on mobile in normal flow
               justifyContent: 'center',
               alignItems: 'center',
@@ -243,23 +243,23 @@ export default function FilamentModal({
 
           {/* Right Column - Form/Details */}
           <Grid size={{ xs: 12, md: 8 }}>
-            <Box sx={{ 
-              display: 'flex', 
-              flexDirection: 'column', 
+            <Box sx={{
+              display: 'flex',
+              flexDirection: 'column',
               gap: 1.5,
               minHeight: '400px', // Ensure minimum height
             }}>
-              
+
               {/* Basic Information Section */}
               <Box>
-                <Typography variant="h6" gutterBottom sx={{ 
-                  color: 'primary.main', 
+                <Typography variant="h5" gutterBottom sx={{
+                  color: 'primary.main',
                   fontWeight: 'bold',
-                  mt: 4,
+                  mt: 3,
                 }}>
                   Basic Information
                 </Typography>
-                
+
                 <Grid container spacing={1.5}>
                   <Grid size={{ xs: 12 }}>
                     {isViewMode ? (
@@ -284,18 +284,18 @@ export default function FilamentModal({
                       />
                     )}
                   </Grid>
-                  
+
                   <Grid size={{ xs: 12, sm: 6 }}>
                     {isViewMode ? (
                       <>
                         <Typography variant="body2" color="text.secondary" gutterBottom>
                           Material Type
                         </Typography>
-                        <Chip 
-                          label={formData.materialType} 
-                          color="primary" 
-                          variant="outlined" 
-                          sx={{ fontWeight: 'bold' }} 
+                        <Chip
+                          label={formData.materialType}
+                          color="primary"
+                          variant="outlined"
+                          sx={{ fontWeight: 'bold' }}
                         />
                       </>
                     ) : (
@@ -318,7 +318,7 @@ export default function FilamentModal({
                       </TextField>
                     )}
                   </Grid>
-                  
+
                   <Grid size={{ xs: 12, sm: 6 }}>
                     {isViewMode ? (
                       <>
@@ -342,7 +342,7 @@ export default function FilamentModal({
                       />
                     )}
                   </Grid>
-                  
+
                   {/* Color Section */}
                   <Grid size={{ xs: 12 }}>
                     {isViewMode ? (
@@ -397,14 +397,14 @@ export default function FilamentModal({
 
               {/* Weight Information Section */}
               <Box>
-                <Typography variant="h6" gutterBottom sx={{ 
-                  color: 'primary.main', 
+                <Typography variant="h5" gutterBottom sx={{
+                  color: 'primary.main',
                   fontWeight: 'bold',
                   mb: 1,
                 }}>
                   Weight Information
                 </Typography>
-                
+
                 <Grid container spacing={1.5}>
                   <Grid size={{ xs: 6 }}>
                     {isViewMode ? (
@@ -428,7 +428,7 @@ export default function FilamentModal({
                       />
                     )}
                   </Grid>
-                  
+
                   <Grid size={{ xs: 6 }}>
                     {isViewMode ? (
                       <>
@@ -458,14 +458,14 @@ export default function FilamentModal({
 
               {/* Notes Section */}
               <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-                <Typography variant="h6" gutterBottom sx={{ 
-                  color: 'primary.main', 
+                <Typography variant="h5" gutterBottom sx={{
+                  color: 'primary.main',
                   fontWeight: 'bold',
                   mb: 1,
                 }}>
                   Notes
                 </Typography>
-                
+
                 {isViewMode ? (
                   formData.notes ? (
                     <Box
@@ -509,30 +509,25 @@ export default function FilamentModal({
                 <>
                   <Divider sx={{ my: 0.5 }} />
                   <Box>
-                    <Typography variant="h6" gutterBottom sx={{ 
-                      color: 'primary.main', 
-                      fontWeight: 'bold',
-                      mb: 1,
-                    }}>
-                      Metadata
-                    </Typography>
-                    
+
+
                     <Grid container spacing={1.5}>
                       <Grid size={{ xs: 6 }}>
-                        <Typography variant="body2" color="text.secondary" gutterBottom>
-                          Created
-                        </Typography>
-                        <Typography variant="body2">
-                          {formatDate(displayFilament.createdAt)}
+                        <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                          Created:
+                          <Typography variant="body2" component="span" sx={{ ml: 1 }}>
+                            {formatDate(displayFilament.createdAt)}
+                          </Typography>
                         </Typography>
                       </Grid>
                       <Grid size={{ xs: 6 }}>
-                        <Typography variant="body2" color="text.secondary" gutterBottom>
-                          Last Updated
+                        <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                          Last Updated:
+                          <Typography variant="body2" component="span" sx={{ ml: 1 }}>
+                            {formatDate(displayFilament.updatedAt)}
+                          </Typography>
                         </Typography>
-                        <Typography variant="body2">
-                          {formatDate(displayFilament.updatedAt)}
-                        </Typography>
+
                       </Grid>
                     </Grid>
                   </Box>
