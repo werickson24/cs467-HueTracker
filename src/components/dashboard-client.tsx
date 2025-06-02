@@ -33,13 +33,10 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import SignOutButton from '@/components/auth/signout-button';
 import SearchBar from '@/components/search/SearchBar';
 import SearchResultsPanel from '@/components/search/SearchResultsPanel';
-//import { fuzzySearch, categorizeResults } from '@/lib/fuzzySearch';
-import { FuzzySearchEX, fuzzySearchEX } from '@/lib/fuzzySearchEX';
+import { fuzzySearchEX } from '@/lib/fuzzySearchEX';
 import AngledSpoolIcon from '@/components/spoolIcon';
 import { materialTypes } from '@/types/Filament';
 import ColorPicker from '@/components/ColorPicker';
-
-//const materialTypes = ['PLA', 'PETG', 'ABS', 'TPU', 'NYLON', 'OTHER'];
 
 // Add this new type for form validation
 type ValidationErrors = {

@@ -33,13 +33,13 @@ class ColorMatcher {
       const c1 = chroma(queryColor);
       const c2 = chroma(filamentColor);
 
-      // Get LCH values to check for neutrality
-      const [l1, c1_chroma, h1] = c1.lch();
-      const [l2, c2_chroma, h2] = c2.lch();
+      // Get LCH chroma value to check for neutrality
+      const c1_chroma = c1.lch()[1];
+      const c2_chroma = c2.lch()[1];
 
       const CHROMA_THRESHOLD = 15; // Adjust this value as needed
 
-      let kL = 1;
+      const kL = 1;
       let kC = 1.5;
       let kH = 2;
 
@@ -141,7 +141,7 @@ class QueryParser {
 
     // --- Color detection ---
     // Make sure we have a clean copy of the current remainingQuery for word splitting
-    let currentWordsForColors = remainingQuery.toLowerCase().split(/\s+/).filter(w => w.length > 0);
+    const currentWordsForColors = remainingQuery.toLowerCase().split(/\s+/).filter(w => w.length > 0);
     const detectedColors = new Set<string>();
     const usedWordIndices = new Set<number>(); // To track indices of words used by color detection
 
@@ -198,7 +198,7 @@ class QueryParser {
 
 // Enhanced Fuzzy Search System
 export class FuzzySearchEX {
-  private uf: any;
+  private uf: uFuzzy;
 
   constructor() {
     this.uf = new uFuzzy({
