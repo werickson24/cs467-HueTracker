@@ -1,6 +1,6 @@
 import { auth } from "@/lib/auth"
 import { redirect } from 'next/navigation'
-import HomePage from '@/components/homepage';
+import HomePage from '@/components/Homepage';
 
 export default async function Home() {
   // Check authentication

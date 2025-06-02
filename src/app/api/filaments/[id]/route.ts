@@ -63,16 +63,30 @@ export async function PUT(
       return new NextResponse("Not Found", { status: 404 })
     }
 
+    const updateData: {
+      name?: string
+      materialType?: string
+      brand?: string
+      color?: string
+      weightRemaining?: number
+      spoolWeight?: number
+      notes?: string | null
+    } = {}
+
+    if (data.name !== undefined) updateData.name = data.name
+    if (data.materialType !== undefined) updateData.materialType = data.materialType
+    if (data.brand !== undefined) updateData.brand = data.brand
+    if (data.color !== undefined) updateData.color = data.color
+    if (data.weightRemaining !== undefined) updateData.weightRemaining = data.weightRemaining
+    if (data.spoolWeight !== undefined) updateData.spoolWeight = data.spoolWeight
+    if (data.notes !== undefined) updateData.notes = data.notes
+
     const filament = await prisma.filament.update({
       where: {
         id,
       },
-      data: {
-        ...data,
-        userId: session.user.id,
-      },
+      data: updateData,
     })
-
     return NextResponse.json(filament)
   } catch (error) {
     console.error('Error updating filament:', error)

@@ -12,6 +12,9 @@ interface ResultCardProps {
 
 const ResultCard: React.FC<ResultCardProps> = ({ filament, onClick }) => {
 
+    const tooltipContent = Object.entries(filament)
+    .map(([key, value]) => `${key}: ${value}`)
+    .join('\n');
 
   return (
     <Card
@@ -32,6 +35,7 @@ const ResultCard: React.FC<ResultCardProps> = ({ filament, onClick }) => {
       }}
       onClick={() => onClick(filament)}
       elevation={3}
+      title={tooltipContent}
     >
       <CardMedia
         sx={{
@@ -55,25 +59,23 @@ const ResultCard: React.FC<ResultCardProps> = ({ filament, onClick }) => {
         }}
       >
         <Typography
-          variant="caption"
-          noWrap
-          sx={{
-            fontWeight: 'bold',
-            lineHeight: 1.2,
-            fontSize: '0.75rem',
-          }}
+        variant='caption'
+        noWrap
         >
-          {filament.name || 'Unnamed'}
+            {filament.brand || 'N/A'}
+        </Typography>
+        <Typography
+          variant="subtitle1"
+          noWrap
+          sx={{fontWeight: 'bold', textTransform: 'capitalize'}}
+        >
+          {filament.name|| 'Unnamed'}
         </Typography>
         <Typography
           variant="caption"
           noWrap
-          sx={{
-            lineHeight: 1.2,
-            fontSize: '0.7rem',
-          }}
         >
-          {filament.materialType || 'N/A'} • {filament.brand || 'N/A'}
+          {filament.materialType || 'N/A'} • {`${filament.weightRemaining}g` || 'N/A'}
         </Typography>
       </CardContent>
     </Card>

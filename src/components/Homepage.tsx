@@ -18,7 +18,7 @@ export default function HomePage() {
         <Stack spacing={4}>
           <Box textAlign="center">
             <Image
-              src="/HueTracker_Logo_grey.png"
+              src="/HueTracker_Logo_transparent.svg"
               alt="Logo"
               width={800}
               height={200}

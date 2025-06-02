@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Box, Typography, useTheme } from '@mui/material';
-import ResultCard from './ResultCard';
+import ResultCard from '@/components/search/ResultCard';
 import { Filament, FilamentWithScore } from '@/types/Filament';
 
 
