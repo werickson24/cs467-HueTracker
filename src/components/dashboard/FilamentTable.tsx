@@ -10,7 +10,6 @@ import {
   TableRow,
   Paper,
   TableSortLabel,
-  Box,
 } from '@mui/material';
 import { useState, useMemo } from 'react';
 import FilamentTableRow from '@/components/dashboard/FilamentTableRow';

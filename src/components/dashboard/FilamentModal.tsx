@@ -95,7 +95,11 @@ export default function FilamentModal({
     }
 
     // Create a clean copy of formData without metadata fields
-    const { id, createdAt, updatedAt, ...cleanFormData } = formData;
+    const cleanFormData = Object.fromEntries(
+      Object.entries(formData).filter(([key]) =>
+        !['id', 'createdAt', 'updatedAt'].includes(key)
+      )
+    );
 
     onSave(cleanFormData);
   };
