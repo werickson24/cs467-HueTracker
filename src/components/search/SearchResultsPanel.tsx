@@ -8,8 +8,9 @@ import { Filament, FilamentWithScore } from '@/types/Filament';
 interface SearchResultsPanelProps {
   results: {
     bestMatches: FilamentWithScore[];
-    notEnough: FilamentWithScore[];
     closeMatches: FilamentWithScore[];
+    notEnough: FilamentWithScore[];
+    otherMatches: FilamentWithScore[];
   };
   onSelectFilament: (filament: Filament) => void;
   query: string;
@@ -19,8 +20,8 @@ const SearchResultsPanel: React.FC<SearchResultsPanelProps> = ({
   results, 
   onSelectFilament 
 }) => {
-  const { bestMatches, notEnough, closeMatches } = results;
-  const totalResults = bestMatches.length + notEnough.length + closeMatches.length;
+  const { bestMatches, closeMatches, notEnough, otherMatches } = results;
+  const totalResults = bestMatches.length + notEnough.length + closeMatches.length + otherMatches.length;
 
   if (totalResults === 0) {
     return (
@@ -54,13 +55,18 @@ const SearchResultsPanel: React.FC<SearchResultsPanelProps> = ({
         onSelectFilament={onSelectFilament} 
       />
       <ResultGroup 
-        title="Not enough" 
+        title="Close matches" 
+        results={closeMatches} 
+        onSelectFilament={onSelectFilament} 
+      />
+      <ResultGroup 
+        title="Wrong amount" 
         results={notEnough} 
         onSelectFilament={onSelectFilament} 
       />
       <ResultGroup 
         title="Other matches" 
-        results={closeMatches} 
+        results={otherMatches} 
         onSelectFilament={onSelectFilament} 
       />
     </Box>

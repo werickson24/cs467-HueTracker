@@ -68,12 +68,14 @@ export default function DashboardClient() {
   const [searchActive, setSearchActive] = useState(false);
   const [searchResults, setSearchResults] = useState<{
     bestMatches: FilamentWithScore[];
-    notEnough: FilamentWithScore[];
     closeMatches: FilamentWithScore[];
+    notEnough: FilamentWithScore[];
+    otherMatches: FilamentWithScore[];
   }>({
     bestMatches: [],
+    closeMatches: [],
     notEnough: [],
-    closeMatches: []
+    otherMatches: []
   });
 
   useEffect(() => {
@@ -92,9 +94,10 @@ export default function DashboardClient() {
     const { categories } = fuzzySearchEX(filaments, searchQuery);
 
   setSearchResults({
-    bestMatches: [...categories.perfectMatches, ...categories.goodMatches],
+    bestMatches: categories.perfectMatches,
+    closeMatches: categories.goodMatches,
     notEnough: categories.lowQuantityMatches,
-    closeMatches: categories.fuzzyMatches
+    otherMatches: categories.fuzzyMatches
   });
 
 
