@@ -6,12 +6,17 @@ import {
   Container,
   Button,
   Box,
+  ToggleButton,
+  ToggleButtonGroup,
 } from '@mui/material';
+import ViewListIcon from '@mui/icons-material/ViewList';
+import ViewModuleIcon from '@mui/icons-material/ViewModule';
 import SearchBar from '@/components/search/SearchBar';
 import SearchResultsPanel from '@/components/search/SearchResultsPanel';
 import { fuzzySearchEX } from '@/lib/fuzzySearchEX';
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
 import FilamentTable from '@/components/dashboard/FilamentTable';
+import FilamentGrid from '@/components/dashboard/FilamentGrid';
 import DeleteConfirmationDialog from '@/components/dashboard/DeleteConfirmationDialog';
 import LoadingSpinner from '@/components/dashboard/LoadingSpinner';
 import FilamentModal from '@/components/dashboard/FilamentModal';
@@ -26,12 +31,17 @@ type ModalState = {
   filament: Filament | null;
 };
 
+type ViewMode = 'table' | 'grid';
+
 export default function DashboardClient() {
   const [filaments, setFilaments] = useState<Filament[]>([]);
   const [loadingStates, setLoadingStates] = useState<LoadingStates>({
     initial: true,
     dialog: false,
   });
+  
+  // View mode state
+  const [viewMode, setViewMode] = useState<ViewMode>('table');
   
   // Simplified modal state
   const [modalState, setModalState] = useState<ModalState>({
@@ -90,6 +100,15 @@ export default function DashboardClient() {
       console.error('Error fetching filaments:', error);
     } finally {
       setLoadingStates(prev => ({ ...prev, initial: false }));
+    }
+  };
+
+  const handleViewModeChange = (
+    event: React.MouseEvent<HTMLElement>,
+    newViewMode: ViewMode,
+  ) => {
+    if (newViewMode !== null) {
+      setViewMode(newViewMode);
     }
   };
 
@@ -225,18 +244,52 @@ export default function DashboardClient() {
           />
         ) : (
           <>
-            <FilamentTable
-              filaments={filaments}
-              loadingStates={loadingStates}
-              onEdit={handleEditFilament}
-              onDelete={handleDeleteClick}
-              onView={handleViewFilament}
-            />
-            <Box display="flex" justifyContent="end" alignItems="center" mb={1} sx={{ mt: 2 }}>
+            {/* View Toggle and Add Button Row */}
+            <Box 
+              display="flex" 
+              justifyContent="space-between" 
+              alignItems="center" 
+              mb={2}
+              sx={{ mt: 2 }}
+            >
+              <ToggleButtonGroup
+                value={viewMode}
+                exclusive
+                onChange={handleViewModeChange}
+                aria-label="view mode"
+                size="small"
+              >
+                <ToggleButton value="table" aria-label="table view">
+                  <ViewListIcon />
+                </ToggleButton>
+                <ToggleButton value="grid" aria-label="grid view">
+                  <ViewModuleIcon />
+                </ToggleButton>
+              </ToggleButtonGroup>
+
               <Button variant="contained" onClick={handleAddNew}>
                 Add New Filament
               </Button>
             </Box>
+
+            {/* Conditional View Rendering */}
+            {viewMode === 'table' ? (
+              <FilamentTable
+                filaments={filaments}
+                loadingStates={loadingStates}
+                onEdit={handleEditFilament}
+                onDelete={handleDeleteClick}
+                onView={handleViewFilament}
+              />
+            ) : (
+              <FilamentGrid
+                filaments={filaments}
+                loadingStates={loadingStates}
+                onEdit={handleEditFilament}
+                onDelete={handleDeleteClick}
+                onView={handleViewFilament}
+              />
+            )}
           </>
         )}
 
