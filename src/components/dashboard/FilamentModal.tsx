@@ -101,6 +101,14 @@ export default function FilamentModal({
       )
     );
 
+    // Determine if we're editing based on whether we have an existing filament and we're not in add mode
+    const isEditing = (mode === 'edit' || (mode === 'view' && editMode)) && filament?.id;
+
+    // Add the filament ID if we're editing
+    if (isEditing) {
+      cleanFormData.id = filament.id;
+    }
+
     onSave(cleanFormData);
   };
 
@@ -142,6 +150,7 @@ export default function FilamentModal({
 
   const isViewMode = !editMode && mode !== 'add';
   const isAddMode = mode === 'add';
+  const isEditingExisting = (mode === 'edit' || (mode === 'view' && editMode)) && filament?.id;
 
   // Use current filament or preserved data for display
   const displayFilament = filament || preservedFilamentRef.current;
@@ -513,8 +522,6 @@ export default function FilamentModal({
                 <>
                   <Divider sx={{ my: 0.5 }} />
                   <Box>
-
-
                     <Grid container spacing={1.5}>
                       <Grid size={{ xs: 6 }}>
                         <Typography variant="subtitle2" color="text.secondary" gutterBottom>
@@ -531,7 +538,6 @@ export default function FilamentModal({
                             {formatDate(displayFilament.updatedAt)}
                           </Typography>
                         </Typography>
-
                       </Grid>
                     </Grid>
                   </Box>
@@ -586,10 +592,10 @@ export default function FilamentModal({
               {isLoading ? (
                 <Box sx={{ display: 'flex', alignItems: 'center' }}>
                   <CircularProgress size={20} color="inherit" sx={{ mr: 1 }} />
-                  {isAddMode ? 'Adding...' : 'Saving...'}
+                  {isEditingExisting ? 'Saving...' : isAddMode ? 'Adding...' : 'Saving...'}
                 </Box>
               ) : (
-                isAddMode ? 'Add' : 'Save Changes'
+                isEditingExisting ? 'Save Changes' : isAddMode ? 'Add' : 'Save Changes'
               )}
             </Button>
           </>

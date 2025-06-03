@@ -1,18 +1,25 @@
 'use client';
 
 import React from 'react';
-import { Box, Typography, useTheme } from '@mui/material';
-import ResultCard from '@/components/search/ResultCard';
+import { Box, Typography, useTheme, Grid } from '@mui/material';
+import FilamentGridItem from '@/components/dashboard/FilamentGridItem';
 import { Filament, FilamentWithScore } from '@/types/Filament';
-
 
 interface ResultGroupProps {
   title: string;
   results: FilamentWithScore[];
   onSelectFilament: (filament: Filament) => void;
+  onEditFilament?: (filament: Filament) => void;
+  onDeleteFilament?: (filament: Filament) => void;
 }
 
-const ResultGroup: React.FC<ResultGroupProps> = ({ title, results, onSelectFilament }) => {
+const ResultGroup: React.FC<ResultGroupProps> = ({ 
+  title, 
+  results, 
+  onSelectFilament,
+  onEditFilament,
+  onDeleteFilament 
+}) => {
   const theme = useTheme();
   
   if (results.length === 0) {
@@ -20,40 +27,30 @@ const ResultGroup: React.FC<ResultGroupProps> = ({ title, results, onSelectFilam
   }
   
   return (
-    <Box sx={{ mb: 3 }}>
+    <Box sx={{ mb: 4 }}>
       <Typography 
         variant="h4" 
         sx={{ 
-          mb: 1, 
+          mb: 2, 
           fontWeight: 'bold',
           color: theme.palette.mode === 'dark' ? theme.palette.grey[100] : theme.palette.grey[800]
         }}
       >
         {title}
       </Typography>
-      <Box 
-        sx={{ 
-          display: 'flex',
-          overflowX: 'auto',
-          pb: 1,
-          '&::-webkit-scrollbar': {
-            height: 6,
-            backgroundColor: theme.palette.background.paper,
-          },
-          '&::-webkit-scrollbar-thumb': {
-            backgroundColor: theme.palette.mode === 'dark' ? theme.palette.grey[700] : theme.palette.grey[300],
-            borderRadius: 3,
-          },
-        }}
-      >
+      <Grid container spacing={3}>
         {results.map((filament) => (
-          <ResultCard 
-            key={filament.id}
-            filament={filament}
-            onClick={onSelectFilament}
-          />
+          <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }} key={filament.id}>
+            <FilamentGridItem 
+              filament={filament}
+              onView={onSelectFilament}
+              onEdit={onEditFilament}
+              onDelete={onDeleteFilament}
+              showActions={true}
+            />
+          </Grid>
         ))}
-      </Box>
+      </Grid>
     </Box>
   );
 };
