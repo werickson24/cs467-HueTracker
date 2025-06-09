@@ -35,3 +35,21 @@ Created for SE467 - Business Software II.
    ```bash
    npm run build
    ```
+   
+---
+
+## License
+
+This project is licensed under the GNU Affero General Public License v3.0 (AGPL-3.0).  
+See the [LICENSE](./LICENSE) file for details.
+
+---
+
+## Third-Party Licenses and Attribution
+
+This project makes use of dependencies licensed under the following licenses:
+
+- MIT License
+- Apache 2.0 License
+
+For specific license information and details, please refer to the respective projects’ documentation or npm package pages.
