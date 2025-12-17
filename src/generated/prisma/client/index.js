@@ -193,7 +193,7 @@ const config = {
       "value": "prisma-client-js"
     },
     "output": {
-      "value": "/home/wil/Desktop/Classes/se467/huetracker/huetracker/src/generated/prisma/client",
+      "value": "/vercel/sandbox/primary/src/generated/prisma/client",
       "fromEnvVar": null
     },
     "config": {
@@ -209,12 +209,11 @@ const config = {
     "previewFeatures": [
       "driverAdapters"
     ],
-    "sourceFilePath": "/home/wil/Desktop/Classes/se467/huetracker/huetracker/prisma/schema.prisma",
+    "sourceFilePath": "/vercel/sandbox/primary/prisma/schema.prisma",
     "isCustomOutput": true
   },
   "relativeEnvPaths": {
-    "rootEnvPath": null,
-    "schemaEnvPath": "../../../../.env"
+    "rootEnvPath": null
   },
   "relativePath": "../../../../prisma",
   "clientVersion": "6.7.0",
